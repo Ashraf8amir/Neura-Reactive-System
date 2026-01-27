@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial; background-color:#f5f7fa; margin:0; padding:20px;}
+  .container { max-width:600px; margin:0 auto; background:#ffffff; border-radius:8px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+  .header { font-size:20px; font-weight:600; color:#0f1724; margin-bottom:8px; }
+  .lead { color:#334155; margin-bottom:16px; line-height:1.5; }
+  .button { display:inline-block; padding:10px 16px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:6px; margin-top:12px; }
+  .footer { font-size:12px; color:#94a3b8; margin-top:20px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">Welcome <%= userName %>,</div>
+    <div class="lead">
+      Your <%= role === 'doctor' ? 'Doctor' : 'Patient' %> account has been created successfully.  
+      Please complete your profile to start using <strong>Maweed</strong>.
+    </div>
+    <p style="color:#334155; margin:0;">Next steps:</p>
+    <ul style="color:#334155;">
+      <li>Visit your profile page and complete your information.</li>
+      <li>Explore the features available for your role (<%= role %>).</li>
+      <li>If you need help, reply to this email or contact our support team.</li>
+    </ul>
+    <a href="<%= profileLink %>" class="button" target="_blank" rel="noopener">Complete Your Profile</a>
+    <div class="footer">
+      <p style="margin:8px 0 0;">Best regards,<br/>Maweed Team</p>
+      <p style="margin:6px 0 0;">If you did not sign up, please ignore this email or contact support.</p>
+    </div>
+  </div>
+</body>
+</html>

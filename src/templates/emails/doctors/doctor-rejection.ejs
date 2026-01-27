@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile Rejected - Maweed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #d9534f;
+        }
+        .reason {
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #f5c2c7;
+        }
+        a.button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 15px;
+            background: #007bff;
+            color: #fff !important;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+        a.button:hover {
+            background: #0056b3;
+        }
+        p {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Hello Dr. <%= doctorName %>,</h2>
+        <p>We regret to inform you that your profile has been <strong>rejected</strong> on <b>Maweed</b>.</p>
+
+        <div class="reason">
+            <p><strong>Reason for Rejection:</strong></p>
+            <p><%= rejectionReason %></p>
+        </div>
+
+        <p>If you believe this decision was made in error, or if you would like further clarification, please contact our support team.</p>
+
+        <a href="<%= contactLink %>" class="button">Contact Support</a>
+
+        <p>Thank you for your understanding,<br/>
+        The Maweed Team</p>
+    </div>
+</body>
+</html>
