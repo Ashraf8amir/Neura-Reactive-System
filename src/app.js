@@ -23,6 +23,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
+app.get('/', (req, res) => {
+    res.status(200).json({
+        status: httpstatustext.OK,
+        message: 'Hello Vercel!'
+    });
+});
 app.use('/api/v1', routes);
 app.all('/{*splat}', (req, res, next) => {
     next(new AppError(404, httpstatustext.NOT_FOUND, `Can't find ${req.originalUrl} on this server!`));

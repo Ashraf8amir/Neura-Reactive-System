@@ -8,7 +8,8 @@ const httpStatusText = {
     BAD_REQUEST : 'bad request',
     CREATED : 'created',
     NO_CONTENT : 'no content',
-    LOCKED: 'locked'
+    LOCKED: 'locked',
+    OK: 'ok'
 }
 
 module.exports = httpStatusText;
