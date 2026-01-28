@@ -80,6 +80,7 @@ const startServer = async () => {
                 platform: process.platform,
                 memory: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB`
             });
+            process.env.NODE_ENV === 'development' ? logger.info(`http://localhost:${port}`) : logger.info(`Server is live`);
         });
 
         server.on('error', (error) => {

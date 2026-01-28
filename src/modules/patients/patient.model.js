@@ -74,6 +74,13 @@ const patientSchema = new mongoose.Schema({
         age: { type: Number },
       },
     ],
+    currentMedications: [
+        {
+          name: { type: String, trim: true },
+          reason: { type: String, trim: true },
+          dosage: { type: String, trim: true },
+        },
+    ],
     lifestyle: {
       smokingStatus: {
         type: String,
@@ -89,13 +96,6 @@ const patientSchema = new mongoose.Schema({
           message: "{VALUE} is not a valid alcohol consumption level",
         },
       },
-      currentMedications: [
-        {
-          name: { type: String, trim: true },
-          reason: { type: String, trim: true },
-          dosage: { type: String, trim: true },
-        },
-      ],
       physicalActivity: {
         type: String,
         enum: {

@@ -226,19 +226,19 @@ class PatientService {
     async addMedicationService(patientId, medicationData) {
         const patient = await this.getPatientByIdService(patientId);
 
-        patient.medicalProfile.lifestyle.currentMedications.push(medicationData);
+        patient.medicalProfile.currentMedications.push(medicationData);
         await patient.save();
 
-        return patient.medicalProfile.lifestyle.currentMedications[patient.medicalProfile.lifestyle.currentMedications.length - 1];
+        return patient.medicalProfile.currentMedications[patient.medicalProfile.currentMedications.length - 1];
     }
     async updateMedicationService(patientId, medicationId, updateData) {
         const updatedFields = patientHelper.buildPatchUpdate({ 
-            data: updateData, basePath: `medicalProfile.lifestyle.currentMedications.$` 
+            data: updateData, basePath: `medicalProfile.currentMedications.$` 
         });
         const patient = await Patient.findOneAndUpdate(
             { 
                 _id: patientId,
-                'medicalProfile.lifestyle.currentMedications._id': medicationId
+                'medicalProfile.currentMedications._id': medicationId
             },
             updatedFields,
             { new: true, runValidators: true }
@@ -246,14 +246,14 @@ class PatientService {
 
         if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient or medication not found');
 
-        const updatedMedication = patient.medicalProfile.lifestyle.currentMedications.id(medicationId);
+        const updatedMedication = patient.medicalProfile.currentMedications.id(medicationId);
 
         return updatedMedication;
      };
     async deleteMedicationService(patientId, medicationId) { 
         const patient = await Patient.findByIdAndUpdate(
             patientId,
-            { $pull: { 'medicalProfile.lifestyle.currentMedications': { _id: medicationId } } },
+            { $pull: { 'medicalProfile.currentMedications': { _id: medicationId } } },
             { new: true }
         );
 
