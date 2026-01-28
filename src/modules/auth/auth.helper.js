@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const { generateState, generateCodeVerifier } = await require('arctic');
 const AppError = require('../../core/appError.js');
 const httpStatus = require('../../core/httpStatus.js');
 const config = require('../../config/config');
@@ -72,7 +71,8 @@ exports.hashedPassword = async (password) => {
     return hashedPassword;
 };
 
-exports.generateGoogleAuthUrl = () => {
+exports.generateGoogleAuthUrl = async () => {
+    const { generateState, generateCodeVerifier } = await require('arctic');
     const state = generateState();
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
