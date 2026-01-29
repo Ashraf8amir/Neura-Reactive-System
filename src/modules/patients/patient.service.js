@@ -16,7 +16,7 @@ class PatientService {
         if (!patient)  throw new AppError(404, httpStatus.FAIL, 'Patient not found');
         
         return patient;
-    }
+    };
     async getProfileCompletenessService(patientId) { 
         const patient = await this.getPatientByIdService(patientId);
         const { completeness, missing } = patientHelper.basicInfoCompleteness(patient);
@@ -27,7 +27,7 @@ class PatientService {
     async getBasicInfoService(patientId) { 
         const patient = await Patient.findById(patientId)
             .select('email firstName lastName role dateOfBirth gender height weight \
-                bloodType nationalId maritalStatus phone address profileImage');
+                bloodType nationalId maritalStatus phone address nationality profileImage');
         
         if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient not found');
 
@@ -59,7 +59,7 @@ class PatientService {
     async getMedicalProfileService(patientId) {
         const patient = await this.getPatientByIdService(patientId);
         return patient.medicalProfile;
-     };
+    };
     async updateMedicalProfileService(patientId, updateData) {
         const updatedFields = patientHelper.buildPatchUpdate({ 
             data: updateData, basePath: 'medicalProfile' 
@@ -79,7 +79,7 @@ class PatientService {
         patient.medicalProfile.chronicDiseases.push(diseaseData);
         await patient.save();
         return patient.medicalProfile.chronicDiseases[patient.medicalProfile.chronicDiseases.length - 1];
-     };
+    };
     async updateChronicDiseaseService(patientId, diseaseId, updateData) {
         const updatedFields = patientHelper.buildPatchUpdate({ 
             data: updateData, basePath: `medicalProfile.chronicDiseases.$` 
@@ -97,7 +97,7 @@ class PatientService {
         const updatedDisease = patient.medicalProfile.chronicDiseases.id(diseaseId);
 
         return updatedDisease;
-     };
+    };
     async deleteChronicDiseaseService(patientId, diseaseId) {
         const patient = await Patient.findByIdAndUpdate(
             patientId,
@@ -107,14 +107,14 @@ class PatientService {
         if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient not found');
 
         return { deletedId: diseaseId };
-     };
+    };
 
     async addAllergyService(patientId, allergyData) {
         const patient = await this.getPatientByIdService(patientId);
         patient.medicalProfile.allergies.push(allergyData);
         await patient.save();
         return patient.medicalProfile.allergies[patient.medicalProfile.allergies.length - 1];
-     };
+    };
     async updateAllergyService(patientId, allergyId, updateData) { 
         const updatedFields = patientHelper.buildPatchUpdate({ 
             data: updateData, basePath: `medicalProfile.allergies.$` 
@@ -170,7 +170,7 @@ class PatientService {
         const updatedSurgery = patient.medicalProfile.previousSurgeries.id(surgeryId);
 
         return updatedSurgery;
-     };
+    };
     async deleteSurgeryService(patientId, surgeryId) { 
         const patient = await Patient.findByIdAndUpdate(
             patientId,
@@ -190,7 +190,7 @@ class PatientService {
         await patient.save();
 
         return patient.medicalProfile.familyMedicalHistory[patient.medicalProfile.familyMedicalHistory.length - 1];
-     };
+    };
     async updateFamilyMedicalHistoryService(patientId, historyId, updateData) {
         const updatedFields = patientHelper.buildPatchUpdate({ 
             data: updateData, basePath: `medicalProfile.familyMedicalHistory.$` 
@@ -209,7 +209,7 @@ class PatientService {
         const updatedHistory = patient.medicalProfile.familyMedicalHistory.id(historyId);
 
         return updatedHistory;
-     };
+    };
     async deleteFamilyMedicalHistoryService(patientId, historyId) {
         const patient = await Patient.findByIdAndUpdate(
             patientId,
@@ -220,7 +220,7 @@ class PatientService {
         if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient not found');
 
         return { deletedId: historyId };
-     };
+    };
 
     
     async addMedicationService(patientId, medicationData) {
@@ -249,7 +249,7 @@ class PatientService {
         const updatedMedication = patient.medicalProfile.currentMedications.id(medicationId);
 
         return updatedMedication;
-     };
+    };
     async deleteMedicationService(patientId, medicationId) { 
         const patient = await Patient.findByIdAndUpdate(
             patientId,
@@ -271,7 +271,7 @@ class PatientService {
         patient.emergencyContacts.push(contactData);
         await patient.save();
         return patient.emergencyContacts[patient.emergencyContacts.length - 1];
-     };
+    };
     async updateEmergencyContactService(patientId, contactId, updateData) { 
         const updatedFields = patientHelper.buildPatchUpdate({ 
             data: updateData, basePath: `emergencyContacts.$` 

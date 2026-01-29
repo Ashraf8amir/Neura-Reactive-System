@@ -4,84 +4,119 @@ const constants = require('../../shared/constants/enums');
 const validators = require('../../shared/validators/common.validator');
 
 const doctorSchema = new mongoose.Schema({
-  nationalId: {
-    nationalIdImageFront: {
-      url: String,
-      publicId: String,
-      _id: false
+  requiredDocuments: {
+    nationalId: {
+      front: {
+        url: String,
+        status: {
+          type: String,
+          enum: Object.values(constants.DOCUMENT_VERIFICATION_STATUS),
+          default: 'not_uploaded'
+        },
+        rejectionReason: String,
+        uploadedAt: Date
+      },
+      back: {
+        url: String,
+        status: {
+          type: String,
+          enum: Object.values(constants.DOCUMENT_VERIFICATION_STATUS),
+          default: 'not_uploaded'
+        },
+        rejectionReason: String,
+        uploadedAt: Date
+      },
+      number: { type: String, trim: true },
+      verified: { type: Boolean, default: false }
     },
-    nationalIdImageBehind: {
+
+    medicalDegree: {
       url: String,
-      publicId: String,
-      _id: false
+      status: {
+        type: String,
+        enum: Object.values(constants.DOCUMENT_VERIFICATION_STATUS),
+        default: 'not_uploaded'
+      },
+      rejectionReason: String,
+      verified: { type: Boolean, default: false },
+      university: String,
+      graduationYear: Number,
+      degree: String,
+      uploadedAt: Date
+    },
+
+    syndicateCard: {
+      url: String,
+      status: {
+        type: String,
+        enum: Object.values(constants.DOCUMENT_VERIFICATION_STATUS),
+        default: 'not_uploaded'
+      },
+      rejectionReason: String,
+      verified: { type: Boolean, default: false },
+      syndicateNumber: String,
+      issueDate: Date,
+      uploadedAt: Date
+    },
+
+    medicalLicense: {
+      url: String,
+      status: {
+        type: String,
+        enum: Object.values(constants.DOCUMENT_VERIFICATION_STATUS),
+        default: 'not_uploaded'
+      },
+      rejectionReason: String,
+      verified: { type: Boolean, default: false },
+      licenseNumber: String,
+      issueDate: Date,
+      expiryDate: Date,
+      uploadedAt: Date
     }
-  }, 
-  medicalDegreeCertificate: {
-    url: String,
-    publicId: String,
-    _id: false
-  },
-  syndicateMembershipCard: {
-    url: String,
-    publicId: String,
-    _id: false
-  },
-  medicalLicense: {
-        medicalLicenseImage: {
-          url: String,
-          publicId: String,
-          _id: false
-        }
   },
 
   professionalInfo: {
-    professionalInformation: {
-      primarySpecialization: { type: String, trim: true },
-      subSpecializations: [{ type: String, trim: true }],
-      highestDegree: { type: String, trim: true },
-      medicalSchool: { type: String, trim: true },
-      yearsOfExperience: {
-        type: Number,
-        min: [0, "Experience years cannot be negative"],
-        default: 0,
-      },
-      currentPosition: { type: String, trim: true },
-      hospitalAffiliation: [
-        { type: String, trim: true }
-      ]
+    primarySpecialization: { type: String, trim: true },
+    subSpecializations: [{ type: String, trim: true }],
+    highestDegree: { type: String, trim: true },
+    medicalSchool: { type: String, trim: true },
+    yearsOfExperience: {
+      type: Number,
+      min: [0, "Experience years cannot be negative"],
+      default: 0,
+    },
+    currentPosition: { type: String, trim: true },
+    hospitalAffiliation: [{ type: String, trim: true }],
+    bio: { 
+      type: String, 
+      trim: true, 
+      maxlength: [1000, "Bio cannot exceed 1000 characters"] 
     },
     certificates: [
       {
-        nameCertificate: { type: String, trim: true },
+        name: { type: String, trim: true },
         institution: { type: String, trim: true },
         Year: { type: Number },
-        certificateImage: {
-          url: String,
-          publicId: String,
-          _id: false
-        }
+        url: String,
+        uploadedAt: { type: Date, default: Date.now }
       }
     ],
     medicalMemberships: [
       {
-        nameOfAssociation: { type: String, trim: true },
+        nameOfAssociation: { type: String, trim: true, required: true },
         memberId: { type: String, trim: true },
         Since: { type: Number }
       }
     ],
     awards: [
       {
-        nameAward: { type: String, trim: true },
-        by: { type: String, trim: true },
-        Year: { type: Number },
-        AwardImage: {
-          url: String,
-          publicId: String,
-          _id: false
-        }
+        name: { type: String, trim: true, required: true },
+        awardedBy: { type: String, trim: true },
+        year: { type: Number },
+        url: String,
+        uploadedAt: { type: Date, default: Date.now }
       }
     ],
-    bio: { type: String, trim: true, maxlength: [1000, "Bio cannot exceed 1000 characters"] }
   },
 
   clinicInfo: [
@@ -94,6 +129,18 @@ const doctorSchema = new mongoose.Schema({
         required: true,
       },
       isPrimary: { type: Boolean, default: false, index: true },
+      address: {
+        governorate: { type: String, trim: true, required: true },
+        city: { type: String, trim: true, required: true },
+        street: { type: String, trim: true, required: true },
+        buildingNumber: { type: String, trim: true },
+        floor: { type: String, trim: true },
+        landmark: { type: String, trim: true }
+      },
+      location: {
+        type: { type: String, default: 'Point' },
+        coordinates: { type: [Number], index: '2dsphere' } 
+      },
       availableHours: [
       {
         day: {
@@ -134,20 +181,18 @@ const doctorSchema = new mongoose.Schema({
         min: [0, "Follow-up fee cannot be negative"],
         default: 0,
         required: true,
-      },
-      addressClinic: {
-        governorate: { type: String, trim: true, required: true },
-        city: { type: String, trim: true, required: true },
-        street: { type: String, trim: true, required: true },
-        buildingNumber: { type: String, trim: true },
-        floor: { type: String, trim: true },
-      },
+      }
     },
   ],
 
   telemedicine: {
     enabled: { type: Boolean, default: false },
-    consultationFee: { type: Number, default: 0, min: [0, "Consultation fee cannot be negative"], required: true },
+    consultationFee: { 
+      type: Number, 
+      default: 0, 
+      min: [0, "Consultation fee cannot be negative"], 
+      required: true 
+    },
     availableHours: [
         {
           day: {
@@ -193,6 +238,16 @@ const doctorSchema = new mongoose.Schema({
     default: "incomplete",
   },
 
+  adminReview: {
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    reviewedAt: Date,
+    notes: String,
+    rejectionReasons: [String]
+  },
+
   rating: {
     type: Number,
     min: [0, "Rating cannot be less than 0"],
@@ -215,9 +270,14 @@ const doctorSchema = new mongoose.Schema({
   }
 });
 
-// Indexes for optimizing queries
-doctorSchema.index({ rating: -1 });
-doctorSchema.index({ isVerified: 1, accountStatus: 1 });
+doctorSchema.index({ 
+  'professionalInfo.primarySpecialization': 1, 
+  'clinicInfo.address.governorate': 1,
+  'clinicInfo.address.city': 1,
+  'accountStatus': 1,
+  'rating': -1,
+  'isVerified': 1
+});
 
 const Doctor = User.discriminator('doctor', doctorSchema);
 

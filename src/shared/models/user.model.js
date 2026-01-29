@@ -243,11 +243,13 @@ userSchema.set("toJSON", {
 });
 userSchema.set("toObject", { virtuals: true });
 
-userSchema.index({ role: 1, isActive: 1 });
-userSchema.index({ phone: 1 });
-userSchema.index({ "refreshTokens.token": 1 });
-userSchema.index({ "refreshTokens.expiresAt": 1 });
-userSchema.index({ createdAt: -1 });
+userSchema.index({
+  'phone': 1,
+  'refreshTokens.token': 1,
+  'refreshTokens.expiresAt': 1,
+  'createdAt': -1,
+  'role': 1
+})
 
 const User = mongoose.model("User", userSchema);
 

@@ -8,74 +8,10 @@ cloudinary.config({
     api_secret: config.cloudinaryApiSecret
 });
 
-// const uploadToCloudinary = async (fileBuffer, fileName, options = {}) => {
-//     try {
-//         return new Promise((resolve, reject) => {
-//             const uploadStream = cloudinary.uploader.upload_stream(
-//                 {
-//                     folder: 'profile_images',
-//                     public_id: `${Date.now()}_${fileName.split('.')[0]}`,
-//                     resource_type: 'image',
-//                     transformation: options.transformation || [
-//                         { width: 500, height: 500, crop: 'fill', gravity: 'face' },
-//                         { quality: 'auto' },
-//                         { fetch_format: 'auto' }
-//                     ]
-//                 },
-//                 (error, result) => {
-//                     if (error) {
-//                         reject(new Error(`Cloudinary Error: ${error.message}`));
-//                     } else {
-//                         resolve({
-//                             cloudinaryId: result.public_id,
-//                             filename: fileName,
-//                             url: result.secure_url,
-//                             width: result.width,
-//                             height: result.height,
-//                             format: result.format,
-//                             size: result.bytes
-//                         });
-//                     }
-//                 }
-//             );
-
-//             uploadStream.end(fileBuffer);
-//         });
-//     } catch (error) {
-//         throw new Error(`Failed to upload image: ${error.message}`);
-//     }
-// };
-// const uploadDocumentToCloudinary = async (fileBuffer, fileName, folder = '') => {
-//     try {
-//         return new Promise((resolve, reject) => {
-//             const uploadStream = cloudinary.uploader.upload_stream(
-//                 {
-//                     folder: folder,
-//                     public_id: `${Date.now()}_${fileName.split('.')[0]}`,
-//                     resource_type: 'image' 
-//                 },
-//                 (error, result) => {
-//                     if (error) {
-//                         reject(new Error(`Cloudinary Error: ${error.message}`));
-//                     } else {
-//                         resolve({
-//                             publicId: result.public_id,
-//                             url: result.secure_url,
-//                             format: result.format
-//                         });
-//                     }
-//                 }
-//             );
-
-//             uploadStream.end(fileBuffer);
-//         });
-//     } catch (error) {
-//         throw new Error(`Failed to upload document: ${error.message}`);
-//     }
-// };
 exports.uploadDocumentToCloudinary = async (fileBuffer, fileName, mimetype, options = {}) => {
     try {
         const isImage = mimetype.startsWith('image/');
+        const isPdf = mimetype === 'application/pdf';
 
         let resourceType = 'raw';
         let uploadOptions = {
@@ -89,6 +25,9 @@ exports.uploadDocumentToCloudinary = async (fileBuffer, fileName, mimetype, opti
                 { quality: 'auto' },
                 { fetch_format: 'auto' }
             ];
+        } else if (isPdf) {
+            uploadOptions.format = 'pdf';
+            uploadOptions.public_id = uploadOptions.public_id.replace(/\.pdf$/i, '');
         }
 
         uploadOptions.resource_type = resourceType;

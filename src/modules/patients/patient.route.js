@@ -5,11 +5,12 @@ const validateReq  = require('../../shared/middlewares/validation.middleware.js'
 const patientValidators = require('./patient.validator.js');
 const authorizeRoles = require('../../shared/middlewares/roleCheck.middleware.js');
 const uploadMiddleware = require('../../shared/middlewares/upload.middleware.js');
+const roles = require('../../core/roles');
 
 const router = express.Router();
 
 router.use(verifyToken);
-router.use(authorizeRoles('patient'));
+router.use(authorizeRoles(roles.PATIENT));
 
 // ============ Profile Routes ============
 router.get('/me',
