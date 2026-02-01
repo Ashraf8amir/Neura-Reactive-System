@@ -276,24 +276,6 @@ exports.getTelemedicineInfo = asyncWrapper(async (req, res) => {
         { telemedicineInfo }
     );
 });
-
-/**
-    * @desc Update telemedicine info
-    * @route PATCH /api/v1/doctors/me/telemedicine
-    * @access Private (Doctor)
-*/
-exports.updateTelemedicineInfo = asyncWrapper(async (req, res) => {
-    const updatedTelemedicineInfo = await service.updateDoctorTelemedicineInfo(req.user.id, req.body);
-
-    return new ApiResponse(
-        res,
-        200,
-        httpStatus.SUCCESS,
-        'Telemedicine info updated successfully',
-        { telemedicineInfo: updatedTelemedicineInfo }
-    );
-});
-
 /**
     * @desc Toggle telemedicine availability
     * @route PATCH /api/v1/doctors/me/telemedicine/toggle
@@ -308,6 +290,38 @@ exports.toggleTelemedicineAvailability = asyncWrapper(async (req, res) => {
         httpStatus.SUCCESS,
         'Telemedicine availability toggled successfully',
         { telemedicineStatus: updatedStatus }
+    );
+});
+/**
+    * @desc Add telemedicine info
+    * @route POST /api/v1/doctors/me/telemedicine
+    * @access Private (Doctor)
+*/
+exports.addTelemedicineInfo = asyncWrapper(async (req, res) => {
+    const newTelemedicineInfo = await service.addDoctorTelemedicineInfo(req.user.id, req.body);
+
+    return new ApiResponse(
+        res,
+        201,
+        httpStatus.SUCCESS,
+        'Telemedicine info added successfully',
+        { telemedicineInfo: newTelemedicineInfo }
+    );
+});
+/**
+    * @desc Update telemedicine info
+    * @route PATCH /api/v1/doctors/me/telemedicine
+    * @access Private (Doctor)
+*/
+exports.updateTelemedicineInfo = asyncWrapper(async (req, res) => {
+    const updatedTelemedicineInfo = await service.updateDoctorTelemedicineInfo(req.user.id, req.body);
+
+    return new ApiResponse(
+        res,
+        200,
+        httpStatus.SUCCESS,
+        'Telemedicine info updated successfully',
+        { telemedicineInfo: updatedTelemedicineInfo }
     );
 });
 
@@ -352,7 +366,7 @@ exports.uploadNationalIdBack = asyncWrapper(async (req, res) => {
     * @access Private (Doctor)
 */
 exports.uploadMedicalLicense = asyncWrapper(async (req, res) => {
-    const documentInfo = await service.uploadDoctorMedicalLicense(req.user.id, req.file);
+    const documentInfo = await service.uploadDoctorMedicalLicense(req.user.id, req.file, req.body);
     
     return new ApiResponse(
         res,
@@ -368,7 +382,7 @@ exports.uploadMedicalLicense = asyncWrapper(async (req, res) => {
     * @access Private (Doctor)
 */
 exports.uploadMedicalDegree = asyncWrapper(async (req, res) => {
-    const documentInfo = await service.uploadDoctorMedicalDegree(req.user.id, req.file);
+    const documentInfo = await service.uploadDoctorMedicalDegree(req.user.id, req.file, req.body);
 
     return new ApiResponse(
         res,
@@ -384,7 +398,7 @@ exports.uploadMedicalDegree = asyncWrapper(async (req, res) => {
     * @access Private (Doctor)
 */
 exports.uploadSyndicateCard = asyncWrapper(async (req, res) => {
-    const documentInfo = await service.uploadDoctorSyndicateCard(req.user.id, req.file);
+    const documentInfo = await service.uploadDoctorSyndicateCard(req.user.id, req.file, req.body);
 
     return new ApiResponse(
         res,
@@ -400,12 +414,13 @@ exports.uploadSyndicateCard = asyncWrapper(async (req, res) => {
     * @access Private (Doctor)
 */
 exports.submitForReview = asyncWrapper(async (req, res) => {
-    await service.submitDoctorForReview(req.user.id);
+    const result = await service.submitDoctorForReview(req.user.id);
 
     return new ApiResponse(
         res,
         200,
         httpStatus.SUCCESS,
-        'Doctor profile submitted for review successfully'
+        'Doctor profile submitted for review successfully',
+        { result }
     );
 });

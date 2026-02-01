@@ -7,7 +7,7 @@ const pharmacySchema = new mongoose.Schema({
   businessInfo: {
     pharmacyName: {
       type: String,
-      required: [true, "Pharmacy name is required"],
+      required: [false, "Pharmacy name is required"],
       trim: true
     },
     commercialRegistrationNumber: {
@@ -26,7 +26,7 @@ const pharmacySchema = new mongoose.Schema({
       type: String,
       unique: true,
       sparse: true,
-      required: [true, "Pharmacy license number is required"]
+      required: [false, "Pharmacy license number is required"]
     },
     licenseExpiryDate: Date,
     establishedYear: { type: Number },
@@ -67,12 +67,12 @@ const pharmacySchema = new mongoose.Schema({
   pharmacistInfo: {
     pharmacistName: {
       type: String,
-      required: [true, "Pharmacist name is required"],
+      required: [false, "Pharmacist name is required"],
       trim: true
     },
     pharmacistLicenseNumber: {
       type: String,
-      required: [true, "Pharmacist license number is required"],
+      required: [false, "Pharmacist license number is required"],
       unique: true,
       sparse: true
     },
@@ -96,17 +96,17 @@ const pharmacySchema = new mongoose.Schema({
   location: {
     governorate: {
       type: String,
-      required: [true, "Governorate is required"],
+      required: [false, "Governorate is required"],
       trim: true
     },
     city: {
       type: String,
-      required: [true, "City is required"],
+      required: [false, "City is required"],
       trim: true
     },
     street: {
       type: String,
-      required: [true, "Street is required"],
+      required: [false, "Street is required"],
       trim: true
     },
     buildingNumber: { type: String, trim: true },
@@ -132,7 +132,7 @@ const pharmacySchema = new mongoose.Schema({
   contactInfo: {
     primaryPhone: {
       type: String,
-      required: [true, "Primary phone is required"],
+      required: [false, "Primary phone is required"],
       validate: validators.egyptianPhone
     },
     secondaryPhone: {

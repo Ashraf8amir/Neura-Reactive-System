@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const  User  = require('../../shared/models/user.model.js');
-const constants = require('../../shared/constants/enums');
+const enums = require('../../shared/constants/enums');
 const validators = require('../../shared/validators/common.validator');
 
 const doctorSchema = new mongoose.Schema({
@@ -10,21 +10,21 @@ const doctorSchema = new mongoose.Schema({
         url: String,
         status: {
           type: String,
-          enum: Object.values(constants.DOCUMENT_VERIFICATION_STATUS),
-          default: 'not_uploaded'
+          enum: Object.values(enums.DOCUMENT_VERIFICATION_STATUS),
+          default: enums.DOCUMENT_VERIFICATION_STATUS.NOT_UPLOADED
         },
         rejectionReason: String,
-        uploadedAt: Date
+        uploadedAt: { type: Date, default: Date.now }
       },
       back: {
         url: String,
         status: {
           type: String,
-          enum: Object.values(constants.DOCUMENT_VERIFICATION_STATUS),
-          default: 'not_uploaded'
+          enum: Object.values(enums.DOCUMENT_VERIFICATION_STATUS),
+          default: enums.DOCUMENT_VERIFICATION_STATUS.NOT_UPLOADED
         },
         rejectionReason: String,
-        uploadedAt: Date
+        uploadedAt: { type: Date, default: Date.now }
       },
       number: { type: String, trim: true },
       verified: { type: Boolean, default: false }
@@ -34,44 +34,44 @@ const doctorSchema = new mongoose.Schema({
       url: String,
       status: {
         type: String,
-        enum: Object.values(constants.DOCUMENT_VERIFICATION_STATUS),
-        default: 'not_uploaded'
+        enum: Object.values(enums.DOCUMENT_VERIFICATION_STATUS),
+        default: enums.DOCUMENT_VERIFICATION_STATUS.NOT_UPLOADED
       },
       rejectionReason: String,
       verified: { type: Boolean, default: false },
       university: String,
       graduationYear: Number,
       degree: String,
-      uploadedAt: Date
+      uploadedAt: { type: Date, default: Date.now }
     },
 
     syndicateCard: {
       url: String,
       status: {
         type: String,
-        enum: Object.values(constants.DOCUMENT_VERIFICATION_STATUS),
-        default: 'not_uploaded'
+        enum: Object.values(enums.DOCUMENT_VERIFICATION_STATUS),
+        default: enums.DOCUMENT_VERIFICATION_STATUS.NOT_UPLOADED
       },
       rejectionReason: String,
       verified: { type: Boolean, default: false },
       syndicateNumber: String,
       issueDate: Date,
-      uploadedAt: Date
+      uploadedAt: { type: Date, default: Date.now }
     },
 
     medicalLicense: {
       url: String,
       status: {
         type: String,
-        enum: Object.values(constants.DOCUMENT_VERIFICATION_STATUS),
-        default: 'not_uploaded'
+        enum: Object.values(enums.DOCUMENT_VERIFICATION_STATUS),
+        default: enums.DOCUMENT_VERIFICATION_STATUS.NOT_UPLOADED
       },
       rejectionReason: String,
       verified: { type: Boolean, default: false },
       licenseNumber: String,
       issueDate: Date,
       expiryDate: Date,
-      uploadedAt: Date
+      uploadedAt: { type: Date, default: Date.now }
     }
   },
 
@@ -149,7 +149,7 @@ const doctorSchema = new mongoose.Schema({
         day: {
           type: String,
           enum: {
-            values: Object.values(constants.DAYS_OF_WEEK),
+            values: Object.values(enums.DAYS_OF_WEEK),
             message: "{VALUE} is not a valid day",
           },
           required: true,
@@ -189,7 +189,7 @@ const doctorSchema = new mongoose.Schema({
   ],
 
   telemedicine: {
-    enabled: { type: Boolean, default: false },
+    enabled: { type: Boolean , default: false },
     consultationFee: { 
       type: Number, 
       default: 0, 
@@ -201,7 +201,7 @@ const doctorSchema = new mongoose.Schema({
           day: {
             type: String,
             enum: {
-              values: Object.values(constants.DAYS_OF_WEEK),
+              values: Object.values(enums.DAYS_OF_WEEK),
               message: "{VALUE} is not a valid day",
             },
             required: true,
@@ -235,10 +235,10 @@ const doctorSchema = new mongoose.Schema({
   accountStatus: {
     type: String,
     enum: {
-      values: Object.values(constants.ACCOUNT_STATUS),
+      values: Object.values(enums.ACCOUNT_STATUS),
       message: "{VALUE} is not a valid account status",
     },
-    default: "incomplete",
+    default: enums.ACCOUNT_STATUS.INCOMPLETE,
   },
 
   adminReview: {

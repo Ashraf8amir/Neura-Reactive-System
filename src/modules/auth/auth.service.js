@@ -12,7 +12,7 @@ const config = require('../../config/config.js');
 const sendMail = require('../../shared/utils/emailSender.js');
 const httpStatus = require('../../core/httpStatus.js');
 const logger = require('../../core/logger.js');
-const ROLE = require('../../core/roles.js');
+const enums = require('../../shared/constants/enums.js');
 const HELPER = require('./auth.helper.js');
 const { setRefreshTokenInDB } = require('../../shared/utils/globalHelper.js');
 const jwt = require('jsonwebtoken');
@@ -28,10 +28,10 @@ class AuthService {
 
         let model; 
 
-        if (role === ROLE.PATIENT)  model = Patient;
-        else if (role === ROLE.DOCTOR) model = Doctor;
-        else if (role === ROLE.NURSE) model = Nurse;
-        else if (role === ROLE.PHARMACY) model = Pharmacy;
+        if (role === enums.ROLE.PATIENT)  model = Patient;
+        else if (role === enums.ROLE.DOCTOR) model = Doctor;
+        else if (role === enums.ROLE.NURSE) model = Nurse;
+        else if (role === enums.ROLE.PHARMACY) model = Pharmacy;
         
         const newUser = await new model(userData).save();
 
@@ -51,7 +51,7 @@ class AuthService {
 
                 await sendMail(
                     newUser.email,
-                    `Welcome to Sahtak - Complete Your ${role === 'doctor' ? 'Doctor' : 'Patient'} Profile`,
+                    `Welcome to Sahtak - Complete Your ${role === enums.ROLE.DOCTOR ? 'Doctor' : 'Patient'} Profile`,
                     htmlContent,
                     `Welcome ${newUser.fullName},\n\nYour ${role} account has been created. Please complete your profile to start using Sahtak.`
                 );
@@ -203,16 +203,16 @@ class AuthService {
 
         let newUser;
         switch (role) {
-            case ROLE.PATIENT: 
+            case enums.ROLE.PATIENT: 
                 newUser = await new Patient({ ...baseUserData, gender, dateOfBirth }).save();
                 break;
-            case ROLE.DOCTOR:
+            case enums.ROLE.DOCTOR:
                 newUser = await new Doctor({ ...baseUserData, gender, dateOfBirth }).save();
                 break;
-            case ROLE.NURSE:
+            case enums.ROLE.NURSE:
                 newUser = await new Nurse({ ...baseUserData, gender, dateOfBirth }).save();
                 break;
-            case ROLE.PHARMACY:
+            case enums.ROLE.PHARMACY:
                 newUser = await new Pharmacy({ ...baseUserData, gender, dateOfBirth }).save();
                 break;  
             default:
@@ -235,7 +235,7 @@ class AuthService {
 
                 await sendMail(
                     newUser.email,
-                    `Welcome to Sahtak - Complete Your ${role === 'doctor' ? 'Doctor' : 'Patient'} Profile`,
+                    `Welcome to Sahtak - Complete Your ${role === enums.ROLE.DOCTOR ? 'Doctor' : 'Patient'} Profile`,
                     htmlContent,
                     `Welcome ${newUser.fullName},\n\nYour ${role} account has been created. Please complete your profile to start using Sahtak.`
                 );

@@ -1,10 +1,10 @@
-exports.buildPatchUpdate = ({ data, basePath = '' }) => {
-  const $set = {};
+const enums = require('../../shared/constants/enums');
 
-  Object.entries(data).forEach(([key, value]) => {
-    const fullPath = basePath ? `${basePath}.${key}` : key;
-    $set[fullPath] = value;
-  });
-
-  return Object.keys($set).length ? { $set } : {};
+exports.areAllRequiredDocumentsUploaded = (doctor) => {
+    
+  return doctor.nationalId.front.status === enums.DOCUMENT_VERIFICATION_STATUS.UPLOADED &&
+         doctor.nationalId.back.status === enums.DOCUMENT_VERIFICATION_STATUS.UPLOADED &&
+         doctor.medicalLicense.status === enums.DOCUMENT_VERIFICATION_STATUS.UPLOADED &&
+         doctor.medicalDegree.status === enums.DOCUMENT_VERIFICATION_STATUS.UPLOADED &&
+         doctor.syndicateCard.status === enums.DOCUMENT_VERIFICATION_STATUS.UPLOADED;
 };

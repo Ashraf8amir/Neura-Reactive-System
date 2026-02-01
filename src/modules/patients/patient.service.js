@@ -2,6 +2,7 @@ const Patient = require('./patient.model');
 const AppError = require('../../core/appError');
 const httpStatus = require('../../core/httpStatus.js');
 const patientHelper = require('./patient.helper');
+const { buildPatchUpdate } = require('../../shared/utils/buildPatchUpdate');
 const cloudinaryService = require('../../config/cloudinary');
 
 
@@ -81,7 +82,7 @@ class PatientService {
         return patient.medicalProfile.chronicDiseases[patient.medicalProfile.chronicDiseases.length - 1];
     };
     async updateChronicDiseaseService(patientId, diseaseId, updateData) {
-        const updatedFields = patientHelper.buildPatchUpdate({ 
+        const updatedFields = buildPatchUpdate({ 
             data: updateData, basePath: `medicalProfile.chronicDiseases.$` 
         });
         const patient = await Patient.findOneAndUpdate(
@@ -116,7 +117,7 @@ class PatientService {
         return patient.medicalProfile.allergies[patient.medicalProfile.allergies.length - 1];
     };
     async updateAllergyService(patientId, allergyId, updateData) { 
-        const updatedFields = patientHelper.buildPatchUpdate({ 
+        const updatedFields = buildPatchUpdate({ 
             data: updateData, basePath: `medicalProfile.allergies.$` 
         });
         const patient = await Patient.findOneAndUpdate(
@@ -153,7 +154,7 @@ class PatientService {
         return patient.medicalProfile.previousSurgeries[patient.medicalProfile.previousSurgeries.length - 1];
     };
     async updateSurgeryService(patientId, surgeryId, updateData) {
-        const updatedFields = patientHelper.buildPatchUpdate({ 
+        const updatedFields = buildPatchUpdate({ 
             data: updateData, basePath: `medicalProfile.previousSurgeries.$` 
         });
         const patient = await Patient.findOneAndUpdate(
@@ -192,7 +193,7 @@ class PatientService {
         return patient.medicalProfile.familyMedicalHistory[patient.medicalProfile.familyMedicalHistory.length - 1];
     };
     async updateFamilyMedicalHistoryService(patientId, historyId, updateData) {
-        const updatedFields = patientHelper.buildPatchUpdate({ 
+        const updatedFields = buildPatchUpdate({ 
             data: updateData, basePath: `medicalProfile.familyMedicalHistory.$` 
         });
         const patient = await Patient.findOneAndUpdate(
@@ -232,7 +233,7 @@ class PatientService {
         return patient.medicalProfile.currentMedications[patient.medicalProfile.currentMedications.length - 1];
     }
     async updateMedicationService(patientId, medicationId, updateData) {
-        const updatedFields = patientHelper.buildPatchUpdate({ 
+        const updatedFields = buildPatchUpdate({ 
             data: updateData, basePath: `medicalProfile.currentMedications.$` 
         });
         const patient = await Patient.findOneAndUpdate(
@@ -273,7 +274,7 @@ class PatientService {
         return patient.emergencyContacts[patient.emergencyContacts.length - 1];
     };
     async updateEmergencyContactService(patientId, contactId, updateData) { 
-        const updatedFields = patientHelper.buildPatchUpdate({ 
+        const updatedFields = buildPatchUpdate({ 
             data: updateData, basePath: `emergencyContacts.$` 
         });
         const patient = await Patient.findOneAndUpdate(

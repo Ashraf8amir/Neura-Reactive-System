@@ -4,14 +4,14 @@ const validateReq = require("../../shared/middlewares/validation.middleware.js")
 const doctorValidators = require("./doctor.validator");
 const verifyToken  = require("../../shared/middlewares/verifyToken.middleware.js");
 const authorizeRoles = require("../../shared/middlewares/roleCheck.middleware");
-const roles = require('../../core/roles');
+const enums = require('../../shared/constants/enums');
 const uploadMiddleware = require('../../shared/middlewares/upload.middleware.js');
 
 
 const router = express.Router();
 
 router.use(verifyToken);
-router.use(authorizeRoles(roles.DOCTOR));
+router.use(authorizeRoles(enums.ROLE.DOCTOR));
 
 // ============ Profile Routes ============
 router.get("/me",
@@ -85,13 +85,18 @@ router.delete("/me/clinic-info/:clinicId",
 router.get("/me/telemedicine",
   doctorController.getTelemedicineInfo
 );
+router.patch('/me/telemedicine/toggle',
+    doctorController.toggleTelemedicineAvailability
+);
+router.post("/me/telemedicine",
+  validateReq(doctorValidators.addTelemedicineSchema),
+  doctorController.addTelemedicineInfo
+);
 router.patch("/me/telemedicine",
   validateReq(doctorValidators.updateTelemedicineSchema),
   doctorController.updateTelemedicineInfo
 );
-router.patch('/telemedicine/toggle',
-    doctorController.toggleTelemedicineAvailability
-);
+
 
 // ============ Document Upload Routes ============
 

@@ -1,6 +1,6 @@
 const joi = require('joi');
 const passwordComplexity = require('joi-password-complexity');
-const ROLE = require('../../core/roles');
+const enums = require('../../shared/constants/enums');
 
 exports.registerSchema = (data) => {
     const schema = joi.object({
@@ -23,18 +23,22 @@ exports.registerSchema = (data) => {
         password: passwordComplexity().required().messages({
             'any.required': 'Password is required'
         }),
-        role: joi.string().valid(ROLE.DOCTOR, ROLE.PATIENT, ROLE.NURSE, ROLE.PHARMACY).required().messages({
+        role: joi.string().valid(...Object.values(enums.ROLE)).messages({
             'any.only': 'Role must be either doctor, patient, nurse, or pharmacy',
             'any.required': 'Role is required'
         }),
-        dateOfBirth: joi.date().max('now').required().messages({
-            'date.max': 'Date of birth cannot be in the future',
-            'any.required': 'Date of birth is required'
-        }),
-        gender: joi.string().valid('male', 'female').required().messages({
-            'any.only': 'Gender must be either male or female',
-            'any.required': 'Gender is required'
-        })
+        dateOfBirth: joi.date().max('now')
+            .when('role', { is: enums.ROLE.PHARMACY, then: joi.optional(), otherwise: joi.required() })
+            .messages({
+                'date.max': 'Date of birth cannot be in the future',
+                'any.required': 'Date of birth is required'
+            }),
+        gender: joi.string().valid('male', 'female')
+            .when('role', { is: enums.ROLE.PHARMACY, then: joi.optional(), otherwise: joi.required() })
+            .messages({
+                'any.only': 'Gender must be either male or female',
+                'any.required': 'Gender is required'
+            })
 
     })
     return schema.validate(data, { abortEarly: false });
@@ -55,18 +59,22 @@ exports.loginSchema = (data) => {
 
 exports.completeGoogleRegistrationSchema = (data) => {
     const schema = joi.object({
-        role: joi.string().valid(ROLE.DOCTOR, ROLE.PATIENT, ROLE.NURSE, ROLE.PHARMACY).required().messages({
+        role: joi.string().valid(...Object.values(enums.ROLE)).required().messages({
             'any.only': 'Role must be either doctor, patient, nurse, or pharmacy',
             'any.required': 'Role is required'
         }),
-        gender: joi.string().valid('male', 'female').required().messages({
-            'any.only': 'Gender must be either male or female',
-            'any.required': 'Gender is required'
-        }),
-        dateOfBirth: joi.date().max('now').required().messages({ 
-            'date.max': 'Date of birth cannot be in the future',
-            'any.required': 'Date of birth is required'
-        }),
+        gender: joi.string().valid('male', 'female')
+            .when('role', { is: enums.ROLE.PHARMACY, then: joi.optional(), otherwise: joi.required() })
+            .messages({
+                'any.only': 'Gender must be either male or female',
+                'any.required': 'Gender is required'
+            }),
+        dateOfBirth: joi.date().max('now')
+            .when('role', { is: enums.ROLE.PHARMACY, then: joi.optional(), otherwise: joi.required() })
+            .messages({ 
+                'date.max': 'Date of birth cannot be in the future',
+                'any.required': 'Date of birth is required'
+            }),
         tempToken: joi.string().required().messages({
             'any.required': 'Temporary token is required'
         })

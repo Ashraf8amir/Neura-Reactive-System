@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const User = require('../../shared/models/user.model');
-const commonConstants = require('../../shared/constants/enums');
+const enums = require('../../shared/constants/enums');
 const validators = require('../../shared/validators/common.validator');
 const { patientConstants } = require('./patient.constant');
 
@@ -24,7 +24,7 @@ const patientSchema = new mongoose.Schema({
   maritalStatus: {
     type: String,
     enum: {
-      values: commonConstants.MARITAL_STATUS,
+      values: Object.values(enums.MARITAL_STATUS),
       message:
         "{VALUE} is not valid. Marital status must be one of: single, married, divorced, widowed",
     },
@@ -147,6 +147,6 @@ patientSchema.virtual("bmi").get(function () {
 patientSchema.index({ 'emergencyContacts.phoneNumber': 1 });
 patientSchema.index({ bloodType: 1 });
 
-Patient = User.discriminator('patient', patientSchema);
+const Patient = User.discriminator('patient', patientSchema);
 
 module.exports = Patient;

@@ -2,20 +2,23 @@ const Doctor = require('./doctor.model');
 const AppError = require('../../core/appError');
 const httpStatus = require('../../core/httpStatus');
 const doctorHelper = require('./doctor.helper')
+const { buildPatchUpdate } = require('../../shared/utils/buildPatchUpdate');
 const cloudinaryService = require('../../config/cloudinary');
+const enums = require('../../shared/constants/enums');
 
 
 class DoctorService {
 
-    selectBasicFields = 'firstName lastName fullName email phone \
-        dateOfBirth gender age role address nationality profileImage';
+    selectBasicFields = 'firstName lastName fullName email phone dateOfBirth gender age role address nationality profileImage';
 
     async getDoctorById(doctorId, selectFields ='') {
         const query = Doctor.findById(doctorId);
         if (selectFields) query.select(selectFields);
 
         const doctor =  await query;
-        if (!doctor) throw new AppError(404, httpStatus.FAIL, 'Doctor not found');
+        if (!doctor) {
+            throw new AppError(404, httpStatus.FAIL, 'Doctor not found');
+        }
 
         return doctor;
     };
@@ -151,7 +154,7 @@ class DoctorService {
         return doctor.clinicInfo[doctor.clinicInfo.length - 1];
     };
     async updateDoctorClinicInfo(doctorId, clinicId, updateData){
-        const updatedFields = doctorHelper.buildPatchUpdate({ 
+        const updatedFields = buildPatchUpdate({ 
                     data: updateData, basePath: 'clinicInfo.$'
                 });
         const doctor = await Doctor.findOneAndUpdate(
@@ -176,8 +179,211 @@ class DoctorService {
         return { IDDeleted: clinicId };
     };
 
+    async getDoctorTelemedicineInfo(doctorId) {
+        const doctor = await this.getDoctorById(doctorId);
 
+        return doctor.telemedicine;
+    };
+    async toggleDoctorTelemedicineAvailability(doctorId){
+        const doctor = await this.getDoctorById(doctorId);
 
-}
+        doctor.telemedicine.enabled = !doctor.telemedicine.enabled;
+        await doctor.save();
+
+        return doctor.telemedicine.enabled;
+    };
+    async addDoctorTelemedicineInfo(doctorId, telemedicineData){
+        const doctor = await this.getDoctorById(doctorId);
+
+        if (!doctor.telemedicine.enabled) {
+            throw new AppError(400, httpStatus.FAIL, 'Telemedicine is not enabled for this doctor');
+        }
+
+        doctor.telemedicine = telemedicineData;
+        doctor.telemedicine.enabled = true;
+        await doctor.save();
+
+        return doctor.telemedicine;
+    }
+    async updateDoctorTelemedicineInfo(doctorId, updateData){
+        const updatedFields = buildPatchUpdate({ data: updateData, basePath: 'telemedicine' });
+
+        const doctor = await Doctor.findByIdAndUpdate(
+            doctorId,
+            updatedFields,
+            { new: true, runValidators: true }
+        );
+
+        if (!doctor) throw new AppError(404, httpStatus.FAIL, 'Doctor not found');
+
+        return doctor.telemedicine;
+    };
+
+    async uploadDoctorNationalIdFront(doctorId, NationalIdFrontFile){
+        const doctor = await this.getDoctorById(doctorId);
+
+        const uploadResult = await cloudinaryService.uploadDocumentToCloudinary(
+            NationalIdFrontFile.buffer,
+            NationalIdFrontFile.originalname,
+            NationalIdFrontFile.mimetype,
+            {
+                folder: `doctors/national-ids`,
+                publicId: `national-id-front-${doctorId}-${Date.now()}`
+            }
+        );
+
+        doctor.requiredDocuments.nationalId.front.url = uploadResult.url;
+        doctor.requiredDocuments.nationalId.front.status = enums.DOCUMENT_VERIFICATION_STATUS.UPLOADED;
+        await doctor.save();
+
+        return doctor.requiredDocuments.nationalId.front;
+    };
+    async uploadDoctorNationalIdBack(doctorId, NationalIdBackFile){
+        const doctor = await this.getDoctorById(doctorId);
+
+        const uploadResult = await cloudinaryService.uploadDocumentToCloudinary(
+            NationalIdBackFile.buffer,
+            NationalIdBackFile.originalname,
+            NationalIdBackFile.mimetype,
+            {
+                folder: `doctors/national-ids`,
+                publicId: `national-id-back-${doctorId}-${Date.now()}`
+            }
+        );
+
+        doctor.requiredDocuments.nationalId.back.url = uploadResult.url;
+        doctor.requiredDocuments.nationalId.back.status = enums.DOCUMENT_VERIFICATION_STATUS.UPLOADED;
+        await doctor.save();
+
+        return doctor.requiredDocuments.nationalId.back;
+    };
+    async uploadDoctorMedicalLicense(doctorId, medicalLicenseFile, licenseData){
+        const doctor = await this.getDoctorById(doctorId);
+
+        const uploadResult = await cloudinaryService.uploadDocumentToCloudinary(
+            medicalLicenseFile.buffer,
+            medicalLicenseFile.originalname,
+            medicalLicenseFile.mimetype,
+            {
+                folder: `doctors/medical-licenses`,
+                publicId: `medical-license-${doctorId}-${Date.now()}`
+            }
+        );
+
+        doctor.requiredDocuments.medicalLicense.url = uploadResult.url;
+        doctor.requiredDocuments.medicalLicense.status = enums.DOCUMENT_VERIFICATION_STATUS.UPLOADED;
+        doctor.requiredDocuments.medicalLicense.licenseNumber = licenseData.licenseNumber;
+        doctor.requiredDocuments.medicalLicense.issueDate = licenseData.issueDate;
+        doctor.requiredDocuments.medicalLicense.expiryDate = licenseData.expiryDate;
+        await doctor.save();
+
+        return doctor.requiredDocuments.medicalLicense;
+    };
+    async uploadDoctorMedicalDegree(doctorId, medicalDegreeFile, degreeData){
+        const doctor = await this.getDoctorById(doctorId);
+
+        const uploadResult = await cloudinaryService.uploadDocumentToCloudinary(
+            medicalDegreeFile.buffer,
+            medicalDegreeFile.originalname,
+            medicalDegreeFile.mimetype,
+            {
+                folder: `doctors/medical-degrees`,
+                publicId: `medical-degree-${doctorId}-${Date.now()}`
+            }
+        );
+
+        doctor.requiredDocuments.medicalDegree.url = uploadResult.url;
+        doctor.requiredDocuments.medicalDegree.status = enums.DOCUMENT_VERIFICATION_STATUS.UPLOADED;
+        doctor.requiredDocuments.medicalDegree.university = degreeData.university;
+        doctor.requiredDocuments.medicalDegree.graduationYear = degreeData.graduationYear;
+        doctor.requiredDocuments.medicalDegree.degree = degreeData.degree;
+        await doctor.save();
+
+        return doctor.requiredDocuments.medicalDegree;
+    };
+    async uploadDoctorSyndicateCard(doctorId, syndicateCardFile, cardData){
+        const doctor = await this.getDoctorById(doctorId);
+
+        const uploadResult = await cloudinaryService.uploadDocumentToCloudinary(
+            syndicateCardFile.buffer,
+            syndicateCardFile.originalname,
+            syndicateCardFile.mimetype,
+            {
+                folder: `doctors/syndicate-cards`,
+                publicId: `syndicate-card-${doctorId}-${Date.now()}`
+            }
+        );
+
+        doctor.requiredDocuments.syndicateCard.url = uploadResult.url;
+        doctor.requiredDocuments.syndicateCard.status = enums.DOCUMENT_VERIFICATION_STATUS.UPLOADED;
+        doctor.requiredDocuments.syndicateCard.syndicateNumber = cardData.syndicateNumber;
+        doctor.requiredDocuments.syndicateCard.issueDate = cardData.issueDate;
+        await doctor.save();
+
+        return doctor.requiredDocuments.syndicateCard;
+    };
+    async uploadDoctorMedicalDegree(doctorId, medicalDegreeFile, degreeData){
+        const doctor = await this.getDoctorById(doctorId);
+
+        const uploadResult = await cloudinaryService.uploadDocumentToCloudinary(
+            medicalDegreeFile.buffer,
+            medicalDegreeFile.originalname,
+            medicalDegreeFile.mimetype,
+            {
+                folder: `doctors/medical-degrees`,
+                publicId: `medical-degree-${doctorId}-${Date.now()}`
+            }
+        );
+
+        doctor.requiredDocuments.medicalDegree.url = uploadResult.url;
+        doctor.requiredDocuments.medicalDegree.status = enums.DOCUMENT_VERIFICATION_STATUS.UPLOADED;
+        doctor.requiredDocuments.medicalDegree.university = degreeData.university;
+        doctor.requiredDocuments.medicalDegree.graduationYear = degreeData.graduationYear;
+        doctor.requiredDocuments.medicalDegree.degree = degreeData.degree;
+        await doctor.save();
+
+        return doctor.requiredDocuments.medicalDegree;
+    };
+    async uploadDoctorSyndicateCard(doctorId, syndicateCardFile, cardData){
+        const doctor = await this.getDoctorById(doctorId);
+
+        const uploadResult = await cloudinaryService.uploadDocumentToCloudinary(
+            syndicateCardFile.buffer,
+            syndicateCardFile.originalname,
+            syndicateCardFile.mimetype,
+            {
+                folder: `doctors/syndicate-cards`,
+                publicId: `syndicate-card-${doctorId}-${Date.now()}`
+            }
+        );
+
+        doctor.requiredDocuments.syndicateCard.url = uploadResult.url;
+        doctor.requiredDocuments.syndicateCard.status = enums.DOCUMENT_VERIFICATION_STATUS.UPLOADED;
+        doctor.requiredDocuments.syndicateCard.syndicateNumber = cardData.syndicateNumber;
+        doctor.requiredDocuments.syndicateCard.issueDate = cardData.issueDate;
+        await doctor.save();
+
+        return doctor.requiredDocuments.syndicateCard;
+    };
+
+    async submitDoctorForReview(doctorId) {
+        const doctor = await this.getDoctorById(doctorId);
+
+        if (doctor.accountStatus === enums.ACCOUNT_STATUS.PENDING_VERIFICATION) {
+            throw new AppError(400, httpStatus.FAIL, 'Doctor profile is already submitted for review');
+        }
+
+        const allDocumentsUploaded = doctorHelper.areAllRequiredDocumentsUploaded(doctor.requiredDocuments);
+
+        if (!allDocumentsUploaded) {
+            throw new AppError(400, httpStatus.FAIL, 'All required documents must be uploaded before submitting for review');
+        }
+
+        doctor.accountStatus = enums.ACCOUNT_STATUS.PENDING_VERIFICATION;
+        await doctor.save();
+
+        return { status: doctor.accountStatus };
+    };
+}   
 
 module.exports = new DoctorService();

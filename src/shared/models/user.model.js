@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
-const ENUMS = require("../constants/enums");
+const enums = require("../constants/enums");
 const validators = require("../validators/common.validator");
-const ROLE = require("../../core/roles");
 
 const options = { discriminatorKey: "role", timestamps: true };
 
@@ -35,15 +34,15 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: {
-        values: Object.values(ROLE),
+        values: Object.values(enums.ROLE),
         message: "{VALUE} is not a valid role",
       },
-      default: "patient",
+      default: enums.ROLE.PATIENT,
       required: [true, "Role is required"],
     },
     dateOfBirth: {
       type: Date,
-      required: [true, "Date of birth is required"],
+      required: [function () { return this.role !== enums.ROLE.PHARMACY; }, "Date of birth is required"],
       validate: {
         validator: function (v) {
           return v < new Date();
@@ -54,10 +53,10 @@ const userSchema = new mongoose.Schema(
     gender: {
       type: String,
       enum: {
-        values: Object.values(ENUMS.GENDERS),
+        values: Object.values(enums.GENDERS),
         message: "{VALUE} is not a valid gender, Gender must be either male or female",
       },
-      required: [true, "Gender is required"],
+      required: [function () { return this.role !== enums.ROLE.PHARMACY; }, "Gender is required"],
     },
     provider: {
       type: String,
@@ -176,47 +175,6 @@ userSchema.pre("save", async function () {
     );
   }
 });
-// userSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], function() {
-//   const update = this.getUpdate();
-  
-//   if (update.$set) {
-//     const unsetFields = {};
-    
-//     Object.keys(update.$set).forEach(key => {
-//       const value = update.$set[key];
-      
-//       if (value === '' || value === null) {
-//         unsetFields[key] = '';
-//         delete update.$set[key];
-//       }
-//       else if (typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Date)) {
-//         delete update.$set[key];
-        
-//         Object.entries(value).forEach(([nestedKey, nestedValue]) => {
-//           const fullPath = `${key}.${nestedKey}`;
-          
-//           if (nestedValue === '' || nestedValue === null) {
-//             unsetFields[fullPath] = '';
-//           } else {
-//             update.$set[fullPath] = nestedValue;
-//           }
-//         });
-//       }
-//     });
-    
-//     if (Object.keys(unsetFields).length > 0) {
-//       if (!update.$unset) {
-//         update.$unset = {};
-//       }
-//       Object.assign(update.$unset, unsetFields);
-//     }
-    
-//     if (Object.keys(update.$set).length === 0) {
-//       delete update.$set;
-//     }
-//   }
-// });
-
 
 userSchema.set("toJSON", {
   virtuals: true,

@@ -153,3 +153,70 @@ exports.updateClinicInfoSchema = (data) => {
 
     return updateClinicInfoSchema.validate(data, { abortEarly: false });
 }
+
+exports.addTelemedicineSchema = (data) => {
+    const addTelemedicineSchema = joi.object({
+        consultationFee: joi.number().min(0).max(10000).required(),
+        availableHours: joi.array().items(
+            joi.object({
+                day: joi.string().valid(...Object.values(constants.DAYS_OF_WEEK)).required(),
+                startTime: joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
+                    .messages({ 'string.pattern.base': 'Start time must be in HH:mm format' }),
+                endTime: joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
+                    .messages({ 'string.pattern.base': 'End time must be in HH:mm format' }),
+            }).required()
+        ).required()
+    });
+
+    return addTelemedicineSchema.validate(data, { abortEarly: false });
+}
+exports.updateTelemedicineSchema = (data) => {
+    const updateTelemedicineSchema = joi.object({
+        consultationFee: joi.number().min(0).max(10000).optional(),
+        availableHours: joi.array().items(
+            joi.object({
+                day: joi.string().valid(...Object.values(constants.DAYS_OF_WEEK)).required(),
+                startTime: joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
+                    .messages({ 'string.pattern.base': 'Start time must be in HH:mm format' }),
+                endTime: joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
+                    .messages({ 'string.pattern.base': 'End time must be in HH:mm format' }),
+            }).required()
+        ).optional()
+
+    }).min(1).messages({'object.min': 'At least one field must be provided for update'})
+
+    return updateTelemedicineSchema.validate(data, { abortEarly: false });
+}
+
+exports.uploadMedicalLicenseSchema = (data) => {
+    const uploadMedicalLicenseSchema = joi.object({
+        licenseNumber: joi.string().trim().min(1).max(100).required(),
+        issueDate: joi.date().max('now').required().messages({
+            'date.max': 'Issue date cannot be in the future'
+        }),
+        expiryDate: joi.date().greater(joi.ref('issueDate')).required().messages({
+            'date.greater': 'Expiry date must be after issue date'
+        })
+    }); 
+
+    return uploadMedicalLicenseSchema.validate(data, { abortEarly: false });
+}
+exports.uploadMedicalDegreeSchema = (data) => {
+    const uploadMedicalDegreeSchema = joi.object({
+        university: joi.string().trim().min(2).max(100).required(),
+        graduationYear: joi.number().integer().min(1900).max(new Date().getFullYear()).required(),
+        degree: joi.string().trim().min(2).max(100).required()
+    });
+
+    return uploadMedicalDegreeSchema.validate(data, { abortEarly: false });
+}
+exports.uploadSyndicateCardSchema = (data) => {
+    const uploadSyndicateCardSchema = joi.object({
+        syndicateNumber: joi.string().trim().min(1).max(100).required(),
+        issueDate: joi.date().max('now').required().messages({
+            'date.max': 'Issue date cannot be in the future'
+        })
+    });
+
+    return uploadSyndicateCardSchema.validate(data, { abortEarly: false });
+}
