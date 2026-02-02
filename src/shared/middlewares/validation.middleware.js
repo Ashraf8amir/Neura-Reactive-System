@@ -1,5 +1,5 @@
 const AppError = require('../../core/appError.js');
-const httpStatus = require('../../core/httpStatus.js');
+const { HTTP_STATUS_TEXT } = require('../constants/enums.js');
 
 const validateRequest = (schema) => {
     return (req, res, next) => {
@@ -13,7 +13,7 @@ const validateRequest = (schema) => {
 
             return next(new AppError(
                 400, 
-                httpStatus.FAIL, 
+                HTTP_STATUS_TEXT.FAIL, 
                 errors.length === 1 ? errors[0].message : 'Validation failed'
             ));
         }

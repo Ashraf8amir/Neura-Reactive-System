@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const path = require("path");
 const bcrypt = require("bcryptjs");
 const ejs = require("ejs");
+const jwt = require('jsonwebtoken');
 const User = require('../../shared/models/user.model.js');
 const Patient = require('../../modules/patients/patient.model.js');
 const Doctor = require('../../modules/doctors/doctor.model.js');
@@ -10,21 +11,20 @@ const Pharmacy = require('../../modules/pharmacies/pharmacy.model.js');
 const AppError = require('../../core/appError.js');
 const config = require('../../config/config.js');
 const sendMail = require('../../shared/utils/emailSender.js');
-const httpStatus = require('../../core/httpStatus.js');
+const { HTTP_STATUS_TEXT } = require('../../shared/constants/enums.js');
 const logger = require('../../core/logger.js');
 const enums = require('../../shared/constants/enums.js');
-const HELPER = require('./auth.helper.js');
+const authHelper = require('./auth.helper.js');
 const { setRefreshTokenInDB } = require('../../shared/utils/globalHelper.js');
-const jwt = require('jsonwebtoken');
 
 class AuthService {
     async registerService(userData, req) {
         const { email, password, role } = userData;
 
         const existingUser = await User.findOne({ email });
-        if (existingUser) throw new AppError(400, httpStatus.FAIL, 'Email already registered');
+        if (existingUser) throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Email already registered');
         
-        userData.password = await HELPER.hashedPassword(password);
+        userData.password = await authHelper.hashedPassword(password);
 
         let model; 
 
@@ -35,7 +35,7 @@ class AuthService {
         
         const newUser = await new model(userData).save();
 
-        const { accessToken, refreshToken } = HELPER.generateToken(newUser);
+        const { accessToken, refreshToken } = authHelper.generateToken(newUser);
         await setRefreshTokenInDB(newUser._id, refreshToken, req);
 
         setImmediate(async () => {
@@ -62,25 +62,24 @@ class AuthService {
 
         return { user: newUser, accessToken, refreshToken };
     }
-
     async loginService(credentials, req) {
         const { email, password } = credentials;
 
         const existingUser = await User.findOne({ email });
-        if (!existingUser) throw new AppError(401, httpStatus.FAIL, 'Invalid email');
+        if (!existingUser) throw new AppError(401, HTTP_STATUS_TEXT.FAIL, 'Invalid email');
 
         if (existingUser.isDeleted) 
-            throw new AppError(403, httpStatus.FAIL, 'This account has been deleted. Contact support to restore it.');
+            throw new AppError(403, HTTP_STATUS_TEXT.FAIL, 'This account has been deleted. Contact support to restore it.');
 
         const isPasswordValid = await bcrypt.compare(password, existingUser.password);
         if (!isPasswordValid) {
             await existingUser.save();
-            throw new AppError(401, httpStatus.UNAUTHORIZED, 'Invalid credentials');
+            throw new AppError(401, HTTP_STATUS_TEXT.UNAUTHORIZED, 'Invalid credentials');
         }
 
         await existingUser.save();
 
-        const { accessToken, refreshToken } = HELPER.generateToken(existingUser);
+        const { accessToken, refreshToken } = authHelper.generateToken(existingUser);
         await setRefreshTokenInDB(existingUser._id, refreshToken, req);
 
         existingUser.activity.lastLogin = new Date();
@@ -89,9 +88,8 @@ class AuthService {
 
         return { user: existingUser, accessToken, refreshToken  };
     }
-    
     async logoutService(refreshToken) {
-        if (!refreshToken) throw new AppError(400, httpStatus.FAIL, 'Refresh token required');
+        if (!refreshToken) throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Refresh token required');
 
         const result = await User.updateOne(
             { "refreshTokens.token": refreshToken },
@@ -99,13 +97,12 @@ class AuthService {
         );
 
         if (result.modifiedCount === 0)
-            throw new AppError(400, httpStatus.FAIL, 'Invalid refresh token');
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Invalid refresh token');
 
         return true;
     }
-
     async refreshTokenService(oldRefreshToken, req) {
-        if (!oldRefreshToken) throw new AppError(400, httpStatus.FAIL, 'Refresh token required');
+        if (!oldRefreshToken) throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Refresh token required');
 
         const user = await User.findOneAndUpdate(
           {
@@ -119,16 +116,15 @@ class AuthService {
           { new: false }
         );
 
-        if (!user) throw new AppError(401, httpStatus.UNAUTHORIZED, 'Invalid or expired refresh token');
+        if (!user) throw new AppError(401, HTTP_STATUS_TEXT.UNAUTHORIZED, 'Invalid or expired refresh token');
 
-        const { accessToken, refreshToken } = HELPER.generateToken(user);
+        const { accessToken, refreshToken } = authHelper.generateToken(user);
         await setRefreshTokenInDB(user._id, refreshToken, req);
 
         return { accessToken, refreshToken  };
     }
-
     async googleAuthUrlService(){
-        const { authUrl, state, codeVerifier } = HELPER.generateGoogleAuthUrl();
+        const { authUrl, state, codeVerifier } = authHelper.generateGoogleAuthUrl();
 
         const stateData = {
             state: state,
@@ -138,28 +134,27 @@ class AuthService {
 
         return { authUrl, stateString, codeVerifier };
     }
-
     async googleCallbackService(code, stateCookie, receivedState, codeVerifier, req) {
-        if (!code) throw new AppError(400, httpStatus.FAIL, 'Authorization code is required');
-        if (!codeVerifier) throw new AppError(400, httpStatus.FAIL, 'Code verifier is missing');
+        if (!code) throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Authorization code is required');
+        if (!codeVerifier) throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Code verifier is missing');
         if (!stateCookie || !receivedState)  
-            throw new AppError(400, httpStatus.FAIL, 'State parameter is missing');
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'State parameter is missing');
 
         const stateData = JSON.parse(stateCookie);
     
         if (receivedState !== stateData.state) 
-            throw new AppError(400, httpStatus.FAIL, 'State mismatch. Possible CSRF attack.');
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'State mismatch. Possible CSRF attack.');
 
         if (Date.now() - stateData.timestamp > 10 * 60 * 1000) 
-            throw new AppError(400, httpStatus.FAIL, 'Authorization request expired');
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Authorization request expired');
         
-        const tokenResponse = await HELPER.generateTokenResponse(code, codeVerifier);
+        const tokenResponse = await authHelper.generateTokenResponse(code, codeVerifier);
         const userInfo = await HELPER.getUserInfo(tokenResponse.accessToken);
 
         let user = await User.findOne({ email: userInfo.email });
 
         if (user) {
-            const { accessToken, refreshToken } = HELPER.generateToken(user);
+            const { accessToken, refreshToken } = authHelper.generateToken(user);
             await setRefreshTokenInDB(user._id, refreshToken, req);
             return { user, accessToken, refreshToken, userInfo, isNewUser: false };
         }
@@ -173,24 +168,23 @@ class AuthService {
 
         return { userInfo, isNewUser: true, tempToken };
     }
-
     async completeGoogleRegistrationService(userData, req) {
         const { role, gender, dateOfBirth, tempToken } = userData;
         if (!tempToken) 
-            throw new AppError(400, httpStatus.FAIL, 'Temporary Google user data is missing');
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Temporary Google user data is missing');
 
         let googleUserInfo;
         try {
             googleUserInfo = jwt.verify(tempToken, config.jwtSecret);
         } catch (error) {
-            throw new AppError(400, httpStatus.FAIL, 'Invalid or expired temporary Google user data');
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Invalid or expired temporary Google user data');
         }
 
         const existingUser = await User.findOne({ email: googleUserInfo.email });
-        if (existingUser) throw new AppError(400, httpStatus.FAIL, 'User already exists');
+        if (existingUser) throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'User already exists');
 
         const randomPassword = crypto.randomBytes(32).toString('hex');
-        const hashedPassword = await HELPER.hashedPassword(randomPassword);
+        const hashedPassword = await authHelper.hashedPassword(randomPassword);
 
         const baseUserData = {
             email: googleUserInfo.email,
@@ -216,10 +210,10 @@ class AuthService {
                 newUser = await new Pharmacy({ ...baseUserData, gender, dateOfBirth }).save();
                 break;  
             default:
-                throw new AppError(400, httpStatus.FAIL, 'Invalid role specified'); 
+                throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Invalid role specified'); 
         }
 
-        const { accessToken, refreshToken } = HELPER.generateToken(newUser);
+        const { accessToken, refreshToken } = authHelper.generateToken(newUser);
         await setRefreshTokenInDB(newUser._id, refreshToken, req);
 
         setImmediate(async () => {
@@ -246,12 +240,11 @@ class AuthService {
 
         return { user: newUser, accessToken, refreshToken  };
     }
-
     async sendVerifyOtpService(email) {
         const user = await User.findOne({ email });
-        if (!user) throw new AppError(404, httpStatus.FAIL, 'User with this email does not exist');
+        if (!user) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'User with this email does not exist');
 
-        if (user.isEmailVerified) throw new AppError(400, httpStatus.FAIL, 'Email is already verified');
+        if (user.isEmailVerified) throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Email is already verified');
 
         if (user.verifyOtpExpiry) {
             const otpLifetime = 10 * 60 * 1000; 
@@ -262,13 +255,13 @@ class AuthService {
                 const remainingTime = Math.ceil((otpCooldown - (Date.now() - sentAt)) / 1000);
                 throw new AppError(
                     429,
-                    httpStatus.FAIL,
+                    HTTP_STATUS_TEXT.FAIL,
                     `Please wait ${remainingTime} seconds before requesting another verification code`
                 );
             }
         }
 
-        const otp = HELPER.generateOTP();
+        const otp = authHelper.generateOTP();
         user.verifyOtp = otp;
         user.verifyOtpExpiry = Date.now() + 10 * 60 * 1000;
         await user.save();
@@ -295,23 +288,22 @@ class AuthService {
 
         return true;
     }
-
     async verifyEmailService(email, otp) {
         const user = await User.findOne({ email });
-        if (!user) throw new AppError(404, httpStatus.FAIL, 'User with this email does not exist');
+        if (!user) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'User with this email does not exist');
 
         if (!user.verifyOtp || !user.verifyOtpExpiry || user.verifyOtpExpiry < Date.now()) {
-            throw new AppError(400, httpStatus.FAIL, 'OTP has expired. Please request a new one.');
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'OTP has expired. Please request a new one.');
         }
 
-        if (user.verifyOtp !== otp) throw new AppError(400, httpStatus.FAIL, 'Invalid OTP. Please try again.');
+        if (user.verifyOtp !== otp) throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Invalid OTP. Please try again.');
 
         if (Date.now() > user.verifyOtpExpiry) {
             user.verifyOtp = undefined;
             user.verifyOtpExpiry = undefined;
             await user.save();
 
-            throw new AppError(400, httpStatus.FAIL, 'Verification code has expired. Please request a new one.');
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Verification code has expired. Please request a new one.');
         }
 
         user.isEmailVerified = true;
@@ -321,16 +313,15 @@ class AuthService {
 
         return true;
     }
-
     async requestPasswordResetService(email) {
         const user = await User.findOne({ email });
-        if (!user) throw new AppError(404, httpStatus.FAIL, 'User with this email does not exist');
+        if (!user) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'User with this email does not exist');
 
         if (user.isDeleted) 
-            throw new AppError(403, httpStatus.FAIL, 'This account has been deleted. Contact support to restore it.');
+            throw new AppError(403, HTTP_STATUS_TEXT.FAIL, 'This account has been deleted. Contact support to restore it.');
 
-        const resetToken = HELPER.generateResetToken();
-        const resetTokenHash = HELPER.hashResetToken(resetToken);
+        const resetToken = authHelper.generateResetToken();
+        const resetTokenHash = authHelper.hashResetToken(resetToken);
 
         user.resetPasswordToken = resetTokenHash;
         user.resetPasswordExpires = Date.now() + 60 * 60 * 1000;
@@ -362,18 +353,17 @@ class AuthService {
 
         return true;
     }
-
     async resetPasswordService(token, newPassword) {
-        const hashedToken = HELPER.hashResetToken(token);
+        const hashedToken = authHelper.hashResetToken(token);
 
         const user = await User.findOne({
             resetPasswordToken: hashedToken,
             resetPasswordExpires: { $gt: Date.now() },
         });
 
-        if (!user) throw new AppError(400, httpStatus.FAIL, 'Invalid or expired password reset token');
+        if (!user) throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Invalid or expired password reset token');
 
-        const hashedPwd = await HELPER.hashedPassword(newPassword);
+        const hashedPwd = await authHelper.hashedPassword(newPassword);
         user.password = hashedPwd;
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
@@ -418,19 +408,18 @@ class AuthService {
 
         return true;
     }
-
     async changePasswordService(email, currentPassword, newPassword, currentRefreshToken) {
         const user = await User.findOne({ email });
-        if (!user) throw new AppError(404, httpStatus.FAIL, 'User not found');
+        if (!user) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'User not found');
 
         if (user.provider === 'google') {
-            throw new AppError(400, httpStatus.FAIL, 'Google account users cannot change password.');
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Google account users cannot change password.');
         }
 
         const isMatch = await bcrypt.compare(currentPassword, user.password);
-        if (!isMatch) throw new AppError(401, httpStatus.UNAUTHORIZED, 'Current password is incorrect');
+        if (!isMatch) throw new AppError(401, HTTP_STATUS_TEXT.UNAUTHORIZED, 'Current password is incorrect');
 
-        const hashedPwd = await HELPER.hashedPassword(newPassword);
+        const hashedPwd = await authHelper.hashedPassword(newPassword);
         user.password = hashedPwd;
         user.passwordHistory.push({
             password: hashedPwd,

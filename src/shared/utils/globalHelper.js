@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const { UAParser } = require('ua-parser-js');
 const User  = require('../models/user.model.js');
 const AppError = require('../../core/appError.js');
-const httpStatus = require('../../core/httpStatus.js');
+const { HTTP_STATUS_TEXT } = require('../constants/enums.js');
 
 const generateDeviceFingerprint = (req) => {
     const deviceData = [
@@ -88,7 +88,7 @@ const setRefreshTokenInDB = async (userId, refreshToken, req) => {
 
     const user = await User.findById(userId);
     if (!user) {
-        throw new AppError(404, httpStatus.FAIL, "User not found");
+        throw new AppError(404, HTTP_STATUS_TEXT.FAIL, "User not found");
     }
 
     user.refreshTokens = user.refreshTokens.filter(tokenObj => tokenObj.expiresAt > new Date());
@@ -116,7 +116,7 @@ const setRefreshTokenInDB = async (userId, refreshToken, req) => {
         user.refreshTokens[existingDeviceIndex] = tokenData;
     } else {
         if (user.refreshTokens.length >= 5) {
-            throw new AppError(403, httpStatus.FAIL, 
+            throw new AppError(403, HTTP_STATUS_TEXT.FAIL, 
                 "Maximum number of devices reached. Please logout from another device first.");
         }
         user.refreshTokens.push(tokenData);
@@ -128,9 +128,20 @@ const setRefreshTokenInDB = async (userId, refreshToken, req) => {
     await user.save();
     return true;
 };
+const buildPatchUpdate = ({ data, basePath = '' }) => {
+  const $set = {};
+
+  Object.entries(data).forEach(([key, value]) => {
+    const fullPath = basePath ? `${basePath}.${key}` : key;
+    $set[fullPath] = value;
+  });
+
+  return Object.keys($set).length ? { $set } : {};
+};
 
 module.exports = {
     generateDeviceFingerprint,
     parseDeviceInfo,
-    setRefreshTokenInDB
+    setRefreshTokenInDB,
+    buildPatchUpdate
 }

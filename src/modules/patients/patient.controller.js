@@ -1,5 +1,5 @@
 const asyncWrapper = require('../../shared/middlewares/asyncWrapper.middleware');
-const httpStatus = require('../../core/httpStatus');
+const { HTTP_STATUS_TEXT } = require('../../shared/constants/enums.js');
 const ApiResponse = require('../../core/apiResponse');
 const service = require('./patient.service');
 
@@ -15,7 +15,7 @@ exports.getMyProfile = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Patient profile retrieved successfully',
         { patient }
     );
@@ -32,7 +32,7 @@ exports.getProfileCompleteness = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Profile completeness retrieved successfully',
         { completeness, missing }
     );
@@ -51,7 +51,7 @@ exports.getBasicInfo = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Basic info retrieved successfully',
         { basicInfo }
     );
@@ -68,7 +68,7 @@ exports.updateBasicInfo = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Basic info updated successfully',
         { updatedBasicInfo }
     );
@@ -87,7 +87,7 @@ exports.getMedicalProfile = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Medical profile retrieved successfully',
         { medicalProfile }
     );
@@ -105,7 +105,7 @@ exports.updateMedicalProfile = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Medical profile updated successfully',
         { updatedMedicalProfile }
     );
@@ -124,7 +124,7 @@ exports.addChronicDisease = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         201,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Chronic disease added successfully',
         { newChronicDisease }
     );
@@ -142,7 +142,7 @@ exports.updateChronicDisease = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Chronic disease updated successfully',
         { updatedChronicDisease }
     );
@@ -160,7 +160,7 @@ exports.deleteChronicDisease = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Chronic disease deleted successfully',
         { deletedChronicDisease }
     );
@@ -179,7 +179,7 @@ exports.addAllergy = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         201,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Allergy added successfully',
         { newAllergy }
     );
@@ -197,7 +197,7 @@ exports.updateAllergy = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Allergy updated successfully',
         { updatedAllergy }
     );
@@ -214,7 +214,7 @@ exports.deleteAllergy = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Allergy deleted successfully',
         { deletedAllergy }
     );
@@ -233,7 +233,7 @@ exports.addSurgery = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         201,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Surgery added successfully',
         { newSurgery }
     );
@@ -251,7 +251,7 @@ exports.updateSurgery = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Surgery updated successfully',
         { updatedSurgery }
     );
@@ -269,7 +269,7 @@ exports.deleteSurgery = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Surgery deleted successfully',
         { deletedSurgery }
     );
@@ -289,7 +289,7 @@ exports.addFamilyMedicalHistory = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         201,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Family medical history added successfully',
         { newFamilyMedicalHistory }
     );
@@ -307,7 +307,7 @@ exports.updateFamilyMedicalHistory = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Family medical history updated successfully',
         { updatedFamilyMedicalHistory }
     );
@@ -325,7 +325,7 @@ exports.deleteFamilyMedicalHistory = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Family medical history deleted successfully',
         { deletedFamilyMedicalHistory }
     );
@@ -344,7 +344,7 @@ exports.addMedication = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         201,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Medication added successfully',
         { newMedication }
     );
@@ -362,7 +362,7 @@ exports.updateMedication = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Medication updated successfully',
         { updatedMedication }
     );
@@ -380,7 +380,7 @@ exports.deleteMedication = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Medication deleted successfully',
         { deletedMedication }
     );
@@ -399,7 +399,7 @@ exports.getEmergencyContacts = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Emergency contacts retrieved successfully',
         { emergencyContacts }
     );
@@ -416,7 +416,7 @@ exports.addEmergencyContact = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         201,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Emergency contact added successfully',
         { newEmergencyContact }
     );
@@ -434,7 +434,7 @@ exports.updateEmergencyContact = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Emergency contact updated successfully',
         { updatedEmergencyContact }
     );
@@ -452,7 +452,7 @@ exports.deleteEmergencyContact = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Emergency contact deleted successfully',
         { deletedEmergencyContact }
     );    
@@ -468,7 +468,7 @@ exports.uploadProfileImage = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Profile image uploaded successfully',
         { profileImage },
         { imageDetails }
@@ -485,7 +485,7 @@ exports.deleteProfileImage = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Profile image deleted successfully'
     );
 });

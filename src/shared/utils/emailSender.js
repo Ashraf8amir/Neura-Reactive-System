@@ -1,16 +1,15 @@
 const resend = require('../../config/resend.js');
 const AppError = require('../../core/appError.js');
-const httpStatus = require('../../core/httpStatus.js');
+const { HTTP_STATUS_TEXT } = require('../constants/enums.js');
 const logger = require('../../core/logger.js');
-
 
 const sendMail = async (to, subject, htmlContent, text) => {
     const mailOptions = {
         from: `"Sahtak" <onboarding@resend.dev>`,
-        to: to,
-        subject: subject,
+        to,
+        subject,
         html: htmlContent,
-        Text: text
+        text
     };
 
     try {
@@ -18,7 +17,7 @@ const sendMail = async (to, subject, htmlContent, text) => {
         logger.info('Email sent successfully');
     } catch (error) {
         logger.error('Error sending email:', error);
-        throw new AppError(500, httpStatus.FAIL, 'Error sending email');
+        throw new AppError(500, HTTP_STATUS_TEXT.FAIL, 'Error sending email');
     }
 };
 

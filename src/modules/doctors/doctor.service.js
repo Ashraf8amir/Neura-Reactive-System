@@ -1,8 +1,8 @@
 const Doctor = require('./doctor.model');
 const AppError = require('../../core/appError');
-const httpStatus = require('../../core/httpStatus');
+const { HTTP_STATUS_TEXT } = require('../../shared/constants/enums.js');
 const doctorHelper = require('./doctor.helper')
-const { buildPatchUpdate } = require('../../shared/utils/buildPatchUpdate');
+const { buildPatchUpdate } = require('../../shared/utils/globalHelper');
 const cloudinaryService = require('../../config/cloudinary');
 const enums = require('../../shared/constants/enums');
 
@@ -17,7 +17,7 @@ class DoctorService {
 
         const doctor =  await query;
         if (!doctor) {
-            throw new AppError(404, httpStatus.FAIL, 'Doctor not found');
+            throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Doctor not found');
         }
 
         return doctor;
@@ -33,7 +33,7 @@ class DoctorService {
             { new: true, runValidators: true }
         ).select(this.selectBasicFields);
 
-        if (!doctor) throw new AppError(404, httpStatus.FAIL, 'Doctor not found');
+        if (!doctor) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Doctor not found');
 
         return doctor;
     };
@@ -41,7 +41,7 @@ class DoctorService {
     async getDoctorProfessionalInfo(doctorId) {
         const doctor = await Doctor.findById(doctorId)
         
-        if (!doctor) throw new AppError(404, httpStatus.FAIL, 'Doctor not found');
+        if (!doctor) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Doctor not found');
 
         return doctor.professionalInfo;
     };
@@ -52,7 +52,7 @@ class DoctorService {
             { new: true, runValidators: true }
         );
 
-        if (!doctor) throw new AppError(404, httpStatus.FAIL, 'Doctor not found');
+        if (!doctor) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Doctor not found');
 
         return doctor.professionalInfo;
     };
@@ -84,7 +84,7 @@ class DoctorService {
             { new: true }
         );
 
-        if (!doctor) throw new AppError(404, httpStatus.FAIL, 'Doctor not found');
+        if (!doctor) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Doctor not found');
 
         return { IDDeleted: certificateId };
     };
@@ -103,7 +103,7 @@ class DoctorService {
             { new: true }
         );
 
-        if (!doctor) throw new AppError(404, httpStatus.FAIL, 'Doctor not found');
+        if (!doctor) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Doctor not found');
 
         return { IDDeleted: membershipId };
     };
@@ -135,7 +135,7 @@ class DoctorService {
             { new: true }
         );
 
-        if (!doctor) throw new AppError(404, httpStatus.FAIL, 'Doctor not found');
+        if (!doctor) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Doctor not found');
 
         return { IDDeleted: awardId };
     };
@@ -163,7 +163,7 @@ class DoctorService {
             { new: true, runValidators: true }
         );
 
-        if (!doctor) throw new AppError(404, httpStatus.FAIL, 'Doctor not found');
+        if (!doctor) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Doctor not found');
 
         return doctor.clinicInfo.find(clinic => clinic._id.toString() === clinicId);
     };
@@ -174,7 +174,7 @@ class DoctorService {
             { new: true }
         );
 
-        if (!doctor) throw new AppError(404, httpStatus.FAIL, 'Doctor not found');
+        if (!doctor) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Doctor not found');
 
         return { IDDeleted: clinicId };
     };
@@ -196,7 +196,7 @@ class DoctorService {
         const doctor = await this.getDoctorById(doctorId);
 
         if (!doctor.telemedicine.enabled) {
-            throw new AppError(400, httpStatus.FAIL, 'Telemedicine is not enabled for this doctor');
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Telemedicine is not enabled for this doctor');
         }
 
         doctor.telemedicine = telemedicineData;
@@ -214,7 +214,7 @@ class DoctorService {
             { new: true, runValidators: true }
         );
 
-        if (!doctor) throw new AppError(404, httpStatus.FAIL, 'Doctor not found');
+        if (!doctor) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Doctor not found');
 
         return doctor.telemedicine;
     };
@@ -370,13 +370,13 @@ class DoctorService {
         const doctor = await this.getDoctorById(doctorId);
 
         if (doctor.accountStatus === enums.ACCOUNT_STATUS.PENDING_VERIFICATION) {
-            throw new AppError(400, httpStatus.FAIL, 'Doctor profile is already submitted for review');
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Doctor profile is already submitted for review');
         }
 
         const allDocumentsUploaded = doctorHelper.areAllRequiredDocumentsUploaded(doctor.requiredDocuments);
 
         if (!allDocumentsUploaded) {
-            throw new AppError(400, httpStatus.FAIL, 'All required documents must be uploaded before submitting for review');
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'All required documents must be uploaded before submitting for review');
         }
 
         doctor.accountStatus = enums.ACCOUNT_STATUS.PENDING_VERIFICATION;

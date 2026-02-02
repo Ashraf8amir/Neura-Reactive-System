@@ -5,7 +5,9 @@ const validateReq  = require('../../shared/middlewares/validation.middleware.js'
 const patientValidators = require('./patient.validator.js');
 const authorizeRoles = require('../../shared/middlewares/roleCheck.middleware.js');
 const uploadMiddleware = require('../../shared/middlewares/upload.middleware.js');
+const mediaController = require('../../modules/media/media.controller.js');
 const { ROLE } = require('../../shared/constants/enums');
+const Patient = require('./patient.model');
 
 const router = express.Router();
 
@@ -122,10 +124,10 @@ router.delete('/me/emergency-contacts/:contactId',
 // ============ image profile Routes ============
 router.post('/me/profile-image',
     uploadMiddleware.uploadProfileImage,
-    patientController.uploadProfileImage
+    mediaController.uploadProfileImageController(Patient, 'patients/profile-images')
 );
 router.delete('/me/profile-image',
-    patientController.deleteProfileImage
+    mediaController.deleteProfileImageController(Patient)
 );
 
 module.exports = router;

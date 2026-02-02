@@ -6,7 +6,7 @@ const morgan = require('morgan');
 const config = require('./config/config.js');
 const AppError = require('./core/appError.js');
 const globalErrorHandler = require('./shared/middlewares/globalErrorHandler.middleware.js');
-const httpstatustext = require('./core/httpStatus.js');
+const { HTTP_STATUS_TEXT } = require('./shared/constants/enums.js');
 const routes = require('./routes/index.js');
 
 const app = express();
@@ -24,14 +24,11 @@ app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
 app.get('/', (req, res) => {
-    res.status(200).json({
-        status: httpstatustext.OK,
-        message: 'Hello Vercel!'
-    });
+    res.status(200).json({ status: HTTP_STATUS_TEXT.OK, message: 'Hello Vercel!' });
 });
 app.use('/api/v1', routes);
 app.all('/{*splat}', (req, res, next) => {
-    next(new AppError(404, httpstatustext.NOT_FOUND, `Can't find ${req.originalUrl} on this server!`));
+    next(new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, `Can't find ${req.originalUrl} on this server!`));
 });
 
 app.use(globalErrorHandler);

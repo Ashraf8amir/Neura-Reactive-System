@@ -1,5 +1,5 @@
 const joi = require("joi");
-const constants = require("../../shared/constants/enums");
+const enums = require("../../shared/constants/enums");
 
 exports.updateBasicInfoSchema = (data) => {
     const updateBasicInfoSchema = joi.object({
@@ -105,7 +105,7 @@ exports.setClinicInfoSchema = (data) => {
         }).optional(),
         availableHours: joi.array().items(
             joi.object({
-                day: joi.string().valid(...Object.values(constants.DAYS_OF_WEEK)).required(),
+                day: joi.string().valid(...Object.values(enums.DAYS_OF_WEEK)).required(),
                 startTime: joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
                     .messages({ 'string.pattern.base': 'Start time must be in HH:mm format' }),
                 endTime: joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
@@ -140,7 +140,7 @@ exports.updateClinicInfoSchema = (data) => {
         }).optional(),
         availableHours: joi.array().items(
             joi.object({
-                day: joi.string().valid(...Object.values(constants.DAYS_OF_WEEK)).required(),
+                day: joi.string().valid(...Object.values(enums.DAYS_OF_WEEK)).required(),
                 startTime: joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
                     .messages({ 'string.pattern.base': 'Start time must be in HH:mm format' }),
                 endTime: joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
@@ -159,7 +159,7 @@ exports.addTelemedicineSchema = (data) => {
         consultationFee: joi.number().min(0).max(10000).required(),
         availableHours: joi.array().items(
             joi.object({
-                day: joi.string().valid(...Object.values(constants.DAYS_OF_WEEK)).required(),
+                day: joi.string().valid(...Object.values(enums.DAYS_OF_WEEK)).required(),
                 startTime: joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
                     .messages({ 'string.pattern.base': 'Start time must be in HH:mm format' }),
                 endTime: joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
@@ -175,7 +175,7 @@ exports.updateTelemedicineSchema = (data) => {
         consultationFee: joi.number().min(0).max(10000).optional(),
         availableHours: joi.array().items(
             joi.object({
-                day: joi.string().valid(...Object.values(constants.DAYS_OF_WEEK)).required(),
+                day: joi.string().valid(...Object.values(enums.DAYS_OF_WEEK)).required(),
                 startTime: joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
                     .messages({ 'string.pattern.base': 'Start time must be in HH:mm format' }),
                 endTime: joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()

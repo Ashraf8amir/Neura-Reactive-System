@@ -1,4 +1,4 @@
-const httpStatus = require('../../core/httpStatus.js');
+const { HTTP_STATUS_TEXT } = require('../constants/enums.js');
 const config = require('../../config/config.js');
 const logger = require('../../core/logger.js');
 
@@ -32,7 +32,7 @@ const globalErrorHandler = (err, req, res, next) => {
     }
 
     res.status(err.statusCode || 500).json({
-        status: httpStatus.ERROR,
+        status: HTTP_STATUS_TEXT.ERROR,
         message: err.message || 'Internal Server Error'
     })
 

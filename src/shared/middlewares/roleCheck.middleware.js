@@ -1,5 +1,5 @@
 const AppError = require("../../core/appError.js");
-const httpStatus = require('../../core/httpStatus.js');
+const { HTTP_STATUS_TEXT } = require('../constants/enums.js');
 
 const authorizeRoles = (...roles) => {
   return (req, res, next) => {
@@ -7,7 +7,7 @@ const authorizeRoles = (...roles) => {
       return next(
         new AppError(
           403,
-          httpStatus.FORBIDDEN,
+          HTTP_STATUS_TEXT.FORBIDDEN,
           "You do not have permission to perform this action"
         )
       );

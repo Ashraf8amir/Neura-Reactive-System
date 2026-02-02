@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const AppError = require('../../core/appError.js');
-const httpStatus = require('../../core/httpStatus.js');
+const { HTTP_STATUS_TEXT } = require('../../shared/constants/enums.js');
 const config = require('../../config/config');
 const logger = require('../../core/logger.js');
 
@@ -128,7 +128,7 @@ exports.generateTokenResponse = async (code, codeVerifier) => {
 
     } catch (error) {
         logger.error('Failed to exchange authorization code for tokens:', error);
-        throw new AppError(500, httpStatus.FAIL, 'Failed to exchange authorization code for tokens');
+        throw new AppError(500, HTTP_STATUS_TEXT.FAIL, 'Failed to exchange authorization code for tokens');
     }
 };
 
@@ -148,7 +148,7 @@ exports.getUserInfo = async (accessToken) => {
         userInfo = await response.json();
     } catch (error) {
         logger.error('Failed to fetch user info from Google:', error);
-        throw new AppError(400, httpStatus.FAIL, 'Failed to fetch user info from Google');
+        throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Failed to fetch user info from Google');
     }
 
     const firstName = userInfo.given_name || userInfo.name?.split(' ')[0] || 'User';

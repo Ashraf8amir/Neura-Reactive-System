@@ -1,6 +1,6 @@
 const multer = require('multer');
 const AppError = require('../../core/appError.js');
-const httpStatus = require('../../core/httpStatus.js');
+const { HTTP_STATUS_TEXT } = require('../constants/enums.js');
 
 const storage = multer.memoryStorage();
 
@@ -11,22 +11,22 @@ const imageFilter  = (req, file, cb) => {
 
     mimetype && extname ? 
     cb(null, true) : 
-    cb(new AppError(400, httpStatus.FAIL, 'Only image files are allowed'), false);
+    cb(new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Only image files are allowed'), false);
 };
 const pdfFilter = (req, file, cb) => {
     const isPdf = file.mimetype === 'application/pdf';
 
     isPdf ? 
     cb(null, true) : 
-    cb(new AppError(400, httpStatus.FAIL, 'Only PDF files are allowed'), false);
+    cb(new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Only PDF files are allowed'), false);
 };
-const imageAndPdfFilter = (req, file, cb) => {
+const imageAndPdfFilter = (req, file, cb) => {  
     const isImage = file.mimetype.startsWith('image/');
     const isPdf = file.mimetype === 'application/pdf';
 
     isImage || isPdf ? 
     cb(null, true) : 
-    cb(new AppError(400, httpStatus.FAIL, 'Only image and PDF files are allowed'), false);
+    cb(new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Only image and PDF files are allowed'), false);
 };
 
 const uploadImage = multer({

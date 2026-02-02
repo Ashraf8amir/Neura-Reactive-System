@@ -1,5 +1,5 @@
 const asyncWrapper = require('../../shared/middlewares/asyncWrapper.middleware.js');
-const httpStatus = require('../../core/httpStatus.js');
+const { HTTP_STATUS_TEXT } = require('../../shared/constants/enums.js');
 const ApiResponse = require('../../core/apiResponse.js');
 const service = require('./auth.service.js');
 const cookieConfig = require('./auth.helper.js').getCookieConfig();
@@ -20,7 +20,7 @@ exports.register = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         201, 
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         `${user.role} account created successfully. Please complete your profile.`,
         { user, accessToken }
     );
@@ -40,7 +40,7 @@ exports.login = asyncWrapper(async (req, res) => {
     return new ApiResponse(
       res,
       200,
-      httpStatus.SUCCESS,
+      HTTP_STATUS_TEXT.SUCCESS,
       `Welcome back, ${user.fullName}!`,
       {
         accessToken,
@@ -66,7 +66,7 @@ exports.logout = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Logged out successfully'
     );
 });
@@ -87,7 +87,7 @@ exports.refreshToken = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Token refreshed successfully',
         { accessToken }
     );
@@ -110,7 +110,7 @@ exports.googleAuthUrl = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Google authentication URL generated successfully',
         { url: authUrl }
     );
@@ -137,7 +137,7 @@ exports.googleCallback = asyncWrapper(async (req, res) => {
         return new ApiResponse(
             res,
             200,
-            httpStatus.SUCCESS,
+            HTTP_STATUS_TEXT.SUCCESS,
             'Google authentication successful. Please complete your registration.',
             { isNewUser, tempToken, userInfo }
         );
@@ -150,7 +150,7 @@ exports.googleCallback = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Welcome back!',
         { isNewUser, accessToken, user, userInfo }
     );
@@ -172,7 +172,7 @@ exports.completeGoogleRegistration = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Google registration completed successfully',
         { accessToken, user }
     );
@@ -192,7 +192,7 @@ exports.sendVerifyOtp = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Verification OTP sent successfully',
         {},
         {
@@ -216,7 +216,7 @@ exports.verifyEmail = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Email verified successfully'
     );
 });
@@ -236,7 +236,7 @@ exports.requestPasswordReset = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Password reset instructions have been sent to your email',
         {
             expiresIn: '15 minutes',
@@ -259,7 +259,7 @@ exports.resetPassword = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Password has been reset successfully'
     );
 });
@@ -279,7 +279,7 @@ exports.changePassword = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Password changed successfully'
     );
 });

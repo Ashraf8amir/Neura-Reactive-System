@@ -1,4 +1,3 @@
-// src/modules/medical-records/models/medicalRecord.model.js
 const mongoose = require("mongoose");
 
 const medicalRecordSchema = new mongoose.Schema(
@@ -390,28 +389,30 @@ const medicalRecordSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
-// Indexes
+
+
 medicalRecordSchema.index({ patientId: 1, consultationDate: -1 });
 medicalRecordSchema.index({ doctorId: 1, consultationDate: -1 });
 medicalRecordSchema.index({ appointmentId: 1 });
 medicalRecordSchema.index({ status: 1 });
 medicalRecordSchema.index({ "diagnosis.primaryDiagnosis": "text" });
 medicalRecordSchema.index({ createdAt: -1 });
-// Virtual: Patient Full Name (populate)
+
+
 medicalRecordSchema.virtual("patientName", {
   ref: "Patient",
   localField: "patientId",
   foreignField: "_id",
   justOne: true,
 });
-// Virtual: Doctor Full Name (populate)
 medicalRecordSchema.virtual("doctorName", {
   ref: "Doctor",
   localField: "doctorId",
   foreignField: "_id",
   justOne: true,
 });
-// Method: Finalize record
+
+
 medicalRecordSchema.methods.finalize = function () {
   if (this.status === "draft") {
     this.status = "finalized";
@@ -419,7 +420,6 @@ medicalRecordSchema.methods.finalize = function () {
   }
   return this.save();
 };
-// Method: Add amendment
 medicalRecordSchema.methods.addAmendment = function (
   doctorId,
   reason,
@@ -434,7 +434,6 @@ medicalRecordSchema.methods.addAmendment = function (
   this.status = "amended";
   return this.save();
 };
-// Method: Log access
 medicalRecordSchema.methods.logAccess = function (
   userId,
   accessType,
@@ -448,7 +447,6 @@ medicalRecordSchema.methods.logAccess = function (
   });
   return this.save();
 };
-// Static: Get patient history
 medicalRecordSchema.statics.getPatientHistory = function (
   patientId,
   options = {}

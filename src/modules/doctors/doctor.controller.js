@@ -1,5 +1,5 @@
 const asyncWrapper = require('../../shared/middlewares/asyncWrapper.middleware');
-const httpStatus = require('../../core/httpStatus');
+const { HTTP_STATUS_TEXT } = require('../../shared/constants/enums.js');
 const ApiResponse = require('../../core/apiResponse');
 const service = require('./doctor.service');
 
@@ -14,7 +14,7 @@ exports.getMyProfile = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Doctor profile retrieved successfully',
         { doctor }
     );
@@ -33,7 +33,7 @@ exports.getBasicInfo = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Doctor basic info retrieved successfully',
         { basicInfo }
     );
@@ -49,7 +49,7 @@ exports.updateBasicInfo = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Doctor basic info updated successfully',
         { basicInfo: updatedBasicInfo }
     );
@@ -67,7 +67,7 @@ exports.getProfessionalInfo = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Doctor professional info retrieved successfully',
         { professionalInfo }
     );
@@ -84,7 +84,7 @@ exports.updateProfessionalInfo = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Doctor professional info updated successfully',
         { professionalInfo: updatedProfessionalInfo }
     );
@@ -102,7 +102,7 @@ exports.addCertificate = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         201,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Certificate added successfully',
         { certificate: newCertificate }
     );
@@ -118,7 +118,7 @@ exports.deleteCertificate = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Certificate deleted successfully',
         { certificate: IDDeleted }
     );
@@ -136,7 +136,7 @@ exports.addMembership = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         201,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Membership added successfully',
         { membership: newMembership }
     );
@@ -152,7 +152,7 @@ exports.deleteMembership = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Membership deleted successfully',
         { membership: deletedMembership }
     );
@@ -170,7 +170,7 @@ exports.addAward = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         201,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Award added successfully',
         { award: newAward }
     );
@@ -186,7 +186,7 @@ exports.deleteAward = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Award deleted successfully',
         { award: deletedAward }
     );
@@ -205,7 +205,7 @@ exports.getClinicInfo = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Clinic info retrieved successfully',
         { clinicInfo }
     );
@@ -221,7 +221,7 @@ exports.setClinicInfo = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         201,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Clinic info set successfully',
         { clinicInfo }
     );
@@ -237,7 +237,7 @@ exports.updateClinicInfo = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Clinic info updated successfully',
         { clinicInfo: updatedClinicInfo }
     );
@@ -252,7 +252,7 @@ exports.deleteClinicInfo = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Clinic info deleted successfully',
         { clinicInfo: deletedClinicInfo }
     );
@@ -271,7 +271,7 @@ exports.getTelemedicineInfo = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Telemedicine info retrieved successfully',
         { telemedicineInfo }
     );
@@ -287,7 +287,7 @@ exports.toggleTelemedicineAvailability = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Telemedicine availability toggled successfully',
         { telemedicineStatus: updatedStatus }
     );
@@ -303,7 +303,7 @@ exports.addTelemedicineInfo = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         201,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Telemedicine info added successfully',
         { telemedicineInfo: newTelemedicineInfo }
     );
@@ -319,7 +319,7 @@ exports.updateTelemedicineInfo = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Telemedicine info updated successfully',
         { telemedicineInfo: updatedTelemedicineInfo }
     );
@@ -338,7 +338,7 @@ exports.uploadNationalIdFront = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'National ID front side uploaded successfully',
         { document: documentInfo }
     );
@@ -355,7 +355,7 @@ exports.uploadNationalIdBack = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'National ID back side uploaded successfully',
         { document: documentInfo }
     );
@@ -371,7 +371,7 @@ exports.uploadMedicalLicense = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Medical license uploaded successfully',
         { document: documentInfo }
     );
@@ -387,7 +387,7 @@ exports.uploadMedicalDegree = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Medical degree uploaded successfully',
         { document: documentInfo }
     );
@@ -403,7 +403,7 @@ exports.uploadSyndicateCard = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Syndicate card uploaded successfully',
         { document: documentInfo }
     );
@@ -419,7 +419,7 @@ exports.submitForReview = asyncWrapper(async (req, res) => {
     return new ApiResponse(
         res,
         200,
-        httpStatus.SUCCESS,
+        HTTP_STATUS_TEXT.SUCCESS,
         'Doctor profile submitted for review successfully',
         { result }
     );

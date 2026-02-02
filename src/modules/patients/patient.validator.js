@@ -1,6 +1,6 @@
 const joi = require('joi');
 const { patientConstants } = require('./patient.constant');
-const commonConstants = require('../../shared/constants/enums');
+const enums = require('../../shared/constants/enums');
 
 exports.updateBasicInfoSchema = (data) => {
     const updateBasicInfoSchema = joi.object({
@@ -30,8 +30,8 @@ exports.updateBasicInfoSchema = (data) => {
             .messages({ 'any.only': `Blood type must be one of the following: ${patientConstants.BLOOD_TYPES.join(', ')}` }),
         nationalId: joi.string().pattern(/^[0-9]{14}$/).allow('', null).optional()
             .messages({ 'string.pattern.base': 'National ID must be exactly 14 digits' }),
-        maritalStatus: joi.string().valid(...commonConstants.MARITAL_STATUS).allow('', null).optional()
-            .messages({ 'any.only': `Marital status must be one of the following: ${commonConstants.MARITAL_STATUS.join(', ')}` }),
+        maritalStatus: joi.string().valid(...Object.values(enums.MARITAL_STATUS)).allow('', null).optional()
+            .messages({ 'any.only': `Marital status must be one of the following: ${Object.values(enums.MARITAL_STATUS).join(', ')}` }),
         nationality: joi.string().trim().min(2).max(50).valid('Egyptian', 'other').allow('', null).optional(),
         phone: joi.string().pattern(/^01[0-2,5]{1}[0-9]{8}$/).allow('', null).optional()
         .messages({ 'string.pattern.base': 'Phone number must be between 10 to 15 digits' }),

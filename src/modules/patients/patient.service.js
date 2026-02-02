@@ -1,8 +1,8 @@
 const Patient = require('./patient.model');
 const AppError = require('../../core/appError');
-const httpStatus = require('../../core/httpStatus.js');
+const { HTTP_STATUS_TEXT } = require('../../shared/constants/enums.js');
 const patientHelper = require('./patient.helper');
-const { buildPatchUpdate } = require('../../shared/utils/buildPatchUpdate');
+const { buildPatchUpdate } = require('../../shared/utils/globalHelper.js');
 const cloudinaryService = require('../../config/cloudinary');
 
 
@@ -14,7 +14,7 @@ class PatientService {
         if (selectFields) query.select(selectFields);
         
         const patient = await query;
-        if (!patient)  throw new AppError(404, httpStatus.FAIL, 'Patient not found');
+        if (!patient)  throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient not found');
         
         return patient;
     };
@@ -30,7 +30,7 @@ class PatientService {
             .select('email firstName lastName role dateOfBirth gender height weight \
                 bloodType nationalId maritalStatus phone address nationality profileImage');
         
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient not found');
 
         return patient;
     };
@@ -41,7 +41,7 @@ class PatientService {
             { new: true, runValidators: true }
         );
 
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient not found');
 
         const { missing } = patientHelper.basicInfoCompleteness(patient);
         if (missing.length === 0 || (missing.length === 1 && missing.includes('profileImage.imageUrl'))) {
@@ -62,7 +62,7 @@ class PatientService {
         return patient.medicalProfile;
     };
     async updateMedicalProfileService(patientId, updateData) {
-        const updatedFields = patientHelper.buildPatchUpdate({ 
+        const updatedFields = buildPatchUpdate({ 
             data: updateData, basePath: 'medicalProfile' 
         });
         const patient = await Patient.findByIdAndUpdate(
@@ -70,7 +70,7 @@ class PatientService {
             updatedFields,
             { new: true, runValidators: true }
         );
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient not found');
 
         return patient.medicalProfile;
     };
@@ -93,7 +93,7 @@ class PatientService {
             updatedFields,
             { new: true, runValidators: true }
         );
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient or chronic disease not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient or chronic disease not found');
         
         const updatedDisease = patient.medicalProfile.chronicDiseases.id(diseaseId);
 
@@ -105,7 +105,7 @@ class PatientService {
             { $pull: { 'medicalProfile.chronicDiseases': { _id: diseaseId } } },
             { new: true }
         );
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient not found');
 
         return { deletedId: diseaseId };
     };
@@ -129,7 +129,7 @@ class PatientService {
             { new: true, runValidators: true }
         );
 
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient or allergy not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient or allergy not found');
 
         const updatedAllergy = patient.medicalProfile.allergies.id(allergyId);
 
@@ -142,7 +142,7 @@ class PatientService {
             { new: true }
         );
 
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient not found');
 
         return { deletedId: allergyId };
     };
@@ -166,7 +166,7 @@ class PatientService {
             { new: true, runValidators: true }
         );
 
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient or surgery not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient or surgery not found');
 
         const updatedSurgery = patient.medicalProfile.previousSurgeries.id(surgeryId);
 
@@ -179,7 +179,7 @@ class PatientService {
             { new: true }
         );
 
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient not found');
 
         return { deletedId: surgeryId };
     };
@@ -205,7 +205,7 @@ class PatientService {
             { new: true, runValidators: true }
         );
 
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient or family medical history not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient or family medical history not found');
 
         const updatedHistory = patient.medicalProfile.familyMedicalHistory.id(historyId);
 
@@ -218,7 +218,7 @@ class PatientService {
             { new: true }
         );
 
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient not found');
 
         return { deletedId: historyId };
     };
@@ -231,7 +231,7 @@ class PatientService {
         await patient.save();
 
         return patient.medicalProfile.currentMedications[patient.medicalProfile.currentMedications.length - 1];
-    }
+    };
     async updateMedicationService(patientId, medicationId, updateData) {
         const updatedFields = buildPatchUpdate({ 
             data: updateData, basePath: `medicalProfile.currentMedications.$` 
@@ -245,7 +245,7 @@ class PatientService {
             { new: true, runValidators: true }
         );
 
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient or medication not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient or medication not found');
 
         const updatedMedication = patient.medicalProfile.currentMedications.id(medicationId);
 
@@ -258,7 +258,7 @@ class PatientService {
             { new: true }
         );
 
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient not found');
 
         return { deletedId: medicationId };
     };
@@ -286,11 +286,11 @@ class PatientService {
             { new: true, runValidators: true }
         );
 
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient or emergency contact not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient or emergency contact not found');
 
         const updatedContact = patient.emergencyContacts.id(contactId);
         return updatedContact;
-    }
+    };
     async deleteEmergencyContactService(patientId, contactId) { 
         const patient = await Patient.findByIdAndUpdate(
             patientId,
@@ -298,10 +298,10 @@ class PatientService {
             { new: true }
         );
 
-        if (!patient) throw new AppError(404, httpStatus.FAIL, 'Patient not found');
+        if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient not found');
 
         return { deletedId: contactId };
-    }
+    };
 
     async uploadProfileImageService(patientId, imageData) { 
         const patient = await this.getPatientByIdService(patientId);
@@ -341,7 +341,7 @@ class PatientService {
         const patient = await this.getPatientByIdService(patientId);
 
         if (!patient.profileImage) {
-            throw new AppError(404, httpStatus.FAIL, 'No profile image found');
+            throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'No profile image found');
         }
 
         const publicId = cloudinaryService.extractPublicId(patient.profileImage.imageUrl);

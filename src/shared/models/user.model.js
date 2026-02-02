@@ -199,7 +199,9 @@ userSchema.set("toJSON", {
     return ret;
   },
 });
-userSchema.set("toObject", { virtuals: true });
+userSchema.set("toObject", { 
+  virtuals: true 
+});
 
 userSchema.index({
   'phone': 1,

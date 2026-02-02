@@ -6,6 +6,8 @@ const verifyToken  = require("../../shared/middlewares/verifyToken.middleware.js
 const authorizeRoles = require("../../shared/middlewares/roleCheck.middleware");
 const enums = require('../../shared/constants/enums');
 const uploadMiddleware = require('../../shared/middlewares/upload.middleware.js');
+const mediaController = require('../../modules/media/media.controller.js');
+const Doctor = require("./doctor.model");
 
 
 const router = express.Router();
@@ -97,7 +99,6 @@ router.patch("/me/telemedicine",
   doctorController.updateTelemedicineInfo
 );
 
-
 // ============ Document Upload Routes ============
 
 // National ID
@@ -135,6 +136,15 @@ router.post("/me/documents/syndicate-card",
 // Submit for Review
 router.post("/me/submit-for-review",
   doctorController.submitForReview
+);
+
+// ============ Profile Image Routes ============
+router.post('/me/profile-image',
+    uploadMiddleware.uploadProfileImage,
+    mediaController.uploadProfileImageController(Doctor, 'doctors/profile-images')
+);
+router.delete('/me/profile-image',
+    mediaController.deleteProfileImageController(Doctor)
 );
 
 module.exports = router;
