@@ -124,7 +124,7 @@ class AuthService {
         return { accessToken, refreshToken  };
     }
     async googleAuthUrlService(){
-        const { authUrl, state, codeVerifier } = authHelper.generateGoogleAuthUrl();
+        const { authUrl, state, codeVerifier } = await authHelper.generateGoogleAuthUrl();
 
         const stateData = {
             state: state,
@@ -132,7 +132,7 @@ class AuthService {
         };
         const stateString = JSON.stringify(stateData);
 
-        return { authUrl, stateString, codeVerifier };
+        return { authUrl: authUrl.toString(), stateString, codeVerifier };
     }
     async googleCallbackService(code, stateCookie, receivedState, codeVerifier, req) {
         if (!code) throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Authorization code is required');
@@ -149,7 +149,7 @@ class AuthService {
             throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Authorization request expired');
         
         const tokenResponse = await authHelper.generateTokenResponse(code, codeVerifier);
-        const userInfo = await HELPER.getUserInfo(tokenResponse.accessToken);
+        const userInfo = await authHelper.getUserInfo(tokenResponse.accessToken);
 
         let user = await User.findOne({ email: userInfo.email });
 

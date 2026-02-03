@@ -124,7 +124,7 @@ exports.googleAuthUrl = asyncWrapper(async (req, res) => {
 exports.googleCallback = asyncWrapper(async (req, res) => {
     const { code, state: receivedState } = req.query;
     const stateCookie = req.cookies.state;
-    const codeVerifier = req.cookies.code_verifier;
+    const codeVerifier = req.cookies.code_verifier || req.query.code_verifier || req.body?.code_verifier;
 
     const { user, accessToken, refreshToken, userInfo, isNewUser, tempToken } = 
           await service.googleCallbackService(code, stateCookie, receivedState, codeVerifier, req);
