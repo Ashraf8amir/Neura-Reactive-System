@@ -3,7 +3,6 @@ const AppError = require('../../core/appError');
 const { HTTP_STATUS_TEXT } = require('../../shared/constants/enums.js');
 const patientHelper = require('./patient.helper');
 const { buildPatchUpdate } = require('../../shared/utils/globalHelper.js');
-const cloudinaryService = require('../../config/cloudinary');
 
 
 
@@ -303,57 +302,6 @@ class PatientService {
         return { deletedId: contactId };
     };
 
-    async uploadProfileImageService(patientId, imageData) { 
-        const patient = await this.getPatientByIdService(patientId);
-
-        if (patient.profileImage) {
-            const oldPublicId = cloudinaryService.extractPublicId(patient.profileImage.imageUrl);
-            if (oldPublicId) {
-                await cloudinaryService.deleteFromCloudinary(oldPublicId, 'image');
-            }
-        }
-
-        const result = await cloudinaryService.uploadDocumentToCloudinary(imageData.buffer, imageData.originalname, imageData.mimetype, {
-            folder: 'patients/profiles',
-            publicId: `profile-${patientId}-${Date.now()}`,
-            transformation: [
-                { width: 500, height: 500, crop: 'fill', gravity: 'face' },
-                { quality: 'auto:good' },
-                { fetch_format: 'auto' }
-            ]
-        });
-
-        patient.profileImage = { imageUrl: result.url };
-        await patient.save();
-
-        return {
-            profileImage: patient.profileImage,
-            imageDetails: {
-                cloudinaryId: result.publicId,
-                width: result.width,
-                height: result.height,
-                format: result.format,
-                size: result.size
-            }
-        }
-    };
-    async deleteProfileImageService(patientId) { 
-        const patient = await this.getPatientByIdService(patientId);
-
-        if (!patient.profileImage) {
-            throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'No profile image found');
-        }
-
-        const publicId = cloudinaryService.extractPublicId(patient.profileImage.imageUrl);
-        if (publicId) {
-            await cloudinaryService.deleteFromCloudinary(publicId, 'image');
-        }
-
-        patient.profileImage = undefined;
-        await patient.save();
-
-        return { message: 'Profile image deleted successfully' };
-    };
 }
 
 module.exports = new PatientService();

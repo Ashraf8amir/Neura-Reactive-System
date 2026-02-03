@@ -92,7 +92,12 @@ const userSchema = new mongoose.Schema(
     },
     isDeleted: {
       type: Boolean,
-      default: false
+      default: false,
+      index: true 
+    },
+    deletedAt: {
+      type: Date,
+      default: null
     },
     isEmailVerified: {
       type: Boolean,
@@ -168,6 +173,10 @@ userSchema.virtual("age").get(function () {
   return null;
 });
 
+userSchema.pre(/^find/, function (next) {
+  this.find({ isDeleted: { $ne: true } });
+  if (typeof next === 'function') next();
+});
 userSchema.pre("save", async function () {
   if (this.refreshTokens?.length) {
     this.refreshTokens = this.refreshTokens.filter(
@@ -195,6 +204,7 @@ userSchema.set("toJSON", {
     delete ret.createdAt;
     delete ret.updatedAt;
     delete ret.isDeleted;
+    delete ret.deletedAt;
 
     return ret;
   },

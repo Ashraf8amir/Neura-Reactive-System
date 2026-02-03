@@ -349,7 +349,6 @@ exports.addMedication = asyncWrapper(async (req, res) => {
         { newMedication }
     );
 });
-
 /** 
     * @desc    Update medication in logged-in patient's medical profile
     * @route   PATCH /api/v1/patients/me/medical-profile/medications/:medicationId
@@ -367,7 +366,6 @@ exports.updateMedication = asyncWrapper(async (req, res) => {
         { updatedMedication }
     );
 });
-
 /** 
     * @desc    Delete medication from logged-in patient's medical profile
     * @route   DELETE /api/v1/patients/me/medical-profile/medications/:medicationId
@@ -387,7 +385,6 @@ exports.deleteMedication = asyncWrapper(async (req, res) => {
 });
 
 // ============ Emergency Contacts Controllers ============
-
 /** 
     * @desc    Get logged-in patient's emergency contacts
     * @route   GET /api/v1/patients/me/emergency-contacts
@@ -404,7 +401,6 @@ exports.getEmergencyContacts = asyncWrapper(async (req, res) => {
         { emergencyContacts }
     );
 });
-
 /** 
     * @desc    Add an emergency contact to logged-in patient's profile
     * @route   POST /api/v1/patients/me/emergency-contacts
@@ -421,7 +417,6 @@ exports.addEmergencyContact = asyncWrapper(async (req, res) => {
         { newEmergencyContact }
     );
 });
-
 /** 
     * @desc    Update an emergency contact in logged-in patient's profile
     * @route   PATCH /api/v1/patients/me/emergency-contacts/:contactId
@@ -439,7 +434,6 @@ exports.updateEmergencyContact = asyncWrapper(async (req, res) => {
         { updatedEmergencyContact }
     );
 });
-
 /** 
     * @desc    Delete an emergency contact from logged-in patient's profile
     * @route   DELETE /api/v1/patients/me/emergency-contacts/:contactId
@@ -456,36 +450,4 @@ exports.deleteEmergencyContact = asyncWrapper(async (req, res) => {
         'Emergency contact deleted successfully',
         { deletedEmergencyContact }
     );    
-});
-
-/**
-    * @desc    Upload profile image for logged-in patient
-    * @route   POST /api/v1/patients/me/profile-image
-    * @access  Private (patient)
-*/
-exports.uploadProfileImage = asyncWrapper(async (req, res) => {
-    const { profileImage, imageDetails } = await service.uploadProfileImageService(req.user.id, req.file);
-    return new ApiResponse(
-        res,
-        200,
-        HTTP_STATUS_TEXT.SUCCESS,
-        'Profile image uploaded successfully',
-        { profileImage },
-        { imageDetails }
-    );
-});
-
-/**
-    * @desc    Delete profile image for logged-in patient
-    * @route   DELETE /api/v1/patients/me/profile-image
-    * @access  Private (patient)
-*/
-exports.deleteProfileImage = asyncWrapper(async (req, res) => {
-    await service.deleteProfileImageService(req.user.id);
-    return new ApiResponse(
-        res,
-        200,
-        HTTP_STATUS_TEXT.SUCCESS,
-        'Profile image deleted successfully'
-    );
 });
