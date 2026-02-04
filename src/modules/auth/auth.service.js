@@ -123,65 +123,36 @@ class AuthService {
 
         return { accessToken, refreshToken  };
     }
-    async googleAuthUrlService(){
-        const { authUrl, state, codeVerifier } = await authHelper.generateGoogleAuthUrl();
+    async googleCallbackService(data, req) {
+        const { user, isNewUser, userInfo } = data;
 
-        const stateData = {
-            state: state,
-            timestamp: Date.now(),
-        };
-        const stateString = JSON.stringify(stateData);
-
-        return { authUrl: authUrl.toString(), stateString, codeVerifier };
-    }
-    async googleCallbackService(code, stateCookie, receivedState, codeVerifier, req) {
-        if (!code) throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Authorization code is required');
-        if (!codeVerifier) throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Code verifier is missing');
-        if (!stateCookie || !receivedState)  
-            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'State parameter is missing');
-
-        const stateData = JSON.parse(stateCookie);
-    
-        if (receivedState !== stateData.state) 
-            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'State mismatch. Possible CSRF attack.');
-
-        if (Date.now() - stateData.timestamp > 10 * 60 * 1000) 
-            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Authorization request expired');
-        
-        const tokenResponse = await authHelper.generateTokenResponse(code, codeVerifier);
-        const userInfo = await authHelper.getUserInfo(tokenResponse.accessToken);
-
-        let user = await User.findOne({ email: userInfo.email });
-
-        if (user) {
+        if (!isNewUser) {
             const { accessToken, refreshToken } = authHelper.generateToken(user);
             await setRefreshTokenInDB(user._id, refreshToken, req);
-            return { user, accessToken, refreshToken, userInfo, isNewUser: false };
+            return { user, accessToken, refreshToken, isNewUser };
         }
 
-        const payload ={
-            email: userInfo.email,
-            firstName: userInfo.firstName,
-            lastName: userInfo.lastName,
-        };        
-        const tempToken = jwt.sign(payload, config.jwtSecret, { expiresIn: '15m' })
-
-        return { userInfo, isNewUser: true, tempToken };
+        const tempToken = jwt.sign(userInfo, config.jwtSecret, { expiresIn: '15m' });
+        return { userInfo, tempToken, isNewUser };
     }
     async completeGoogleRegistrationService(userData, req) {
         const { role, gender, dateOfBirth, tempToken } = userData;
-        if (!tempToken) 
-            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Temporary Google user data is missing');
 
+        if (!tempToken) {
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Temporary token missing');
+        }
+        
         let googleUserInfo;
         try {
             googleUserInfo = jwt.verify(tempToken, config.jwtSecret);
         } catch (error) {
-            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Invalid or expired temporary Google user data');
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Invalid or expired token');
         }
 
         const existingUser = await User.findOne({ email: googleUserInfo.email });
-        if (existingUser) throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'User already exists');
+        if (existingUser) {
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'User already exists');
+        }
 
         const randomPassword = crypto.randomBytes(32).toString('hex');
         const hashedPassword = await authHelper.hashedPassword(randomPassword);
@@ -190,6 +161,7 @@ class AuthService {
             email: googleUserInfo.email,
             firstName: googleUserInfo.firstName,
             lastName: googleUserInfo.lastName,
+            googleId: googleUserInfo.googleId,
             password: hashedPassword,
             role: role,
             provider: 'google'
@@ -229,16 +201,16 @@ class AuthService {
 
                 await sendMail(
                     newUser.email,
-                    `Welcome to Sahtak - Complete Your ${role === enums.ROLE.DOCTOR ? 'Doctor' : 'Patient'} Profile`,
+                    `Welcome to Sahtak - Complete Your ${role} Profile`,
                     htmlContent,
-                    `Welcome ${newUser.fullName},\n\nYour ${role} account has been created. Please complete your profile to start using Sahtak.`
+                    `Welcome ${newUser.fullName}`
                 );
             } catch (emailError) {
-                logger.error('Welcome email sending failed:', emailError);
+                logger.error('Welcome email failed:', emailError);
             }
         });
 
-        return { user: newUser, accessToken, refreshToken  };
+        return { user: newUser, accessToken, refreshToken };
     }
     async sendVerifyOtpService(email) {
         const user = await User.findOne({ email });

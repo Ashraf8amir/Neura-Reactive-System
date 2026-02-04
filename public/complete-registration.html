@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Complete Registration</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
+    .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h1 { color: #333; margin-bottom: 10px; }
+    h2 { color: #4285f4; font-size: 20px; margin-bottom: 20px; }
+    .form-group { margin: 20px 0; }
+    label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+    select, input { width: 100%; padding: 12px; font-size: 14px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+    select:focus, input:focus { outline: none; border-color: #4285f4; }
+    .btn { background: #4285f4; color: white; border: none; padding: 14px 28px; font-size: 16px; cursor: pointer; border-radius: 6px; width: 100%; margin-top: 10px; }
+    .btn:hover { background: #357abd; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
+    #result { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .info { background: #e8f4fd; color: #0c5460; }
+    .loading { text-align: center; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🏥 Sahtak</h1>
+    <h2>📝 Complete Your Registration</h2>
+    
+    <div id="formSection">
+      <div class="form-group">
+        <label for="roleSelect">Select Your Role:</label>
+        <select id="roleSelect">
+          <option value="">-- Choose Role --</option>
+          <option value="patient">👤 Patient</option>
+          <option value="doctor">👨‍⚕️ Doctor</option>
+          <option value="nurse">👩‍⚕️ Nurse</option>
+          <option value="pharmacy">💊 Pharmacy</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="genderSelect">Gender:</label>
+        <select id="genderSelect">
+          <option value="">-- Choose Gender --</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="dobInput">Date of Birth:</label>
+        <input type="date" id="dobInput" />
+      </div>
+
+      <button id="completeBtn" class="btn">✅ Complete Registration</button>
+    </div>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const API_BASE = `${window.location.origin}/api/v1/auth`;
+    let tempToken = null;
+
+    const resultEl = document.getElementById("result");
+    const formSection = document.getElementById("formSection");
+
+    function showResult(message, type) {
+      resultEl.className = type;
+      resultEl.innerText = message;
+      resultEl.style.display = "block";
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search);
+      tempToken = params.get("tempToken");
+
+      if (!tempToken) {
+        formSection.style.display = "none";
+        showResult("❌ No registration token found. Please start the Google login flow again.", "error");
+        setTimeout(() => {
+          window.location.href = "/google-test.html";
+        }, 3000);
+      } else {
+        // Clean URL but keep tempToken in memory
+        window.history.replaceState({}, document.title, window.location.pathname);
+        showResult("✅ Google authentication successful! Please complete your profile below.", "info");
+      }
+    });
+
+    document.getElementById("completeBtn").addEventListener("click", async () => {
+      const role = document.getElementById("roleSelect").value;
+      const gender = document.getElementById("genderSelect").value;
+      const dateOfBirth = document.getElementById("dobInput").value;
+
+      if (!role || !gender || !dateOfBirth) {
+        showResult("⚠️ Please fill in all fields.", "error");
+        return;
+      }
+
+      if (!tempToken) {
+        showResult("❌ Session expired. Please start over.", "error");
+        return;
+      }
+
+      const btn = document.getElementById("completeBtn");
+      btn.disabled = true;
+      btn.innerText = "⏳ Processing...";
+      showResult("Completing registration...", "info");
+
+      try {
+        const res = await fetch(`${API_BASE}/google/complete-registration`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            role,
+            gender,
+            dateOfBirth,
+            tempToken
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.status?.toLowerCase() === "success") {
+          formSection.style.display = "none";
+          showResult(`🎉 Registration complete! Welcome to Sahtak!\n\nRedirecting to dashboard...`, "success");
+          
+          // Store token and redirect
+          if (data.data?.accessToken) {
+            localStorage.setItem("accessToken", data.data.accessToken);
+          }
+          
+          setTimeout(() => {
+            window.location.href = `/dashboard.html?token=${data.data?.accessToken || ''}`;
+          }, 2000);
+        } else {
+          showResult(`❌ Registration failed: ${data.message || 'Unknown error'}`, "error");
+          btn.disabled = false;
+          btn.innerText = "✅ Complete Registration";
+        }
+      } catch (err) {
+        console.error(err);
+        showResult(`❌ Request failed: ${err.message}`, "error");
+        btn.disabled = false;
+        btn.innerText = "✅ Complete Registration";
+      }
+    });
+  </script>
+</body>
+</html>

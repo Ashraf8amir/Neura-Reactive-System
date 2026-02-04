@@ -8,6 +8,7 @@ const AppError = require('./core/appError.js');
 const globalErrorHandler = require('./shared/middlewares/globalErrorHandler.middleware.js');
 const { HTTP_STATUS_TEXT } = require('./shared/constants/enums.js');
 const routes = require('./routes/index.js');
+const passport = require('./config/passport.js');
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use((config.nodeEnv === 'development') ? morgan('dev') : morgan('combined'));
 app.use(express.urlencoded({ extended: true }));
+app.use(passport.initialize());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 

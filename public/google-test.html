@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Google OAuth Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+    h1 { color: #333; }
+    button { background: #4285f4; color: white; border: none; padding: 12px 24px; font-size: 16px; cursor: pointer; border-radius: 4px; margin: 10px 0; }
+    button:hover { background: #357abd; }
+    .form-group { margin: 15px 0; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    select, input { width: 100%; padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    #result { background: #f5f5f5; padding: 15px; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; min-height: 50px; }
+    #roleSelection { background: #e8f4fd; padding: 20px; border-radius: 8px; margin-top: 20px; }
+    .success { color: green; }
+    .error { color: red; }
+    .info { color: #0066cc; }
+    code { background: #eee; padding: 2px 6px; border-radius: 3px; }
+    .endpoint { font-size: 12px; color: #666; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h1>🔐 Google OAuth Test</h1>
+
+  <!-- Step 1: Start Google OAuth -->
+  <div id="loginSection">
+    <p>Click the button below to start Google OAuth flow:</p>
+    <button id="googleLoginBtn">🚀 Login with Google</button>
+    <p class="endpoint">Endpoint: <code>GET /api/v1/auth/google</code></p>
+  </div>
+
+  <!-- Status/Result Display -->
+  <pre id="result">Ready to test Google OAuth...</pre>
+
+  <!-- Step 3: Complete Registration Form (shown for new users) -->
+  <div id="roleSelection" style="display: none;">
+    <h3>📝 Complete Your Registration</h3>
+    <p class="endpoint">Endpoint: <code>POST /api/v1/auth/google/complete-registration</code></p>
+    
+    <div class="form-group">
+      <label for="roleSelect">Role:</label>
+      <select id="roleSelect">
+        <option value="">-- Select Role --</option>
+        <option value="patient">Patient</option>
+        <option value="doctor">Doctor</option>
+        <option value="nurse">Nurse</option>
+        <option value="pharmacy">Pharmacy</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="genderSelect">Gender:</label>
+      <select id="genderSelect">
+        <option value="">-- Select Gender --</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="dobInput">Date of Birth:</label>
+      <input type="date" id="dobInput" />
+    </div>
+
+    <button id="completeBtn">✅ Complete Registration</button>
+  </div>
+
+  <script>
+    const API_BASE = `http://localhost:3070/api/v1/auth`;
+    let tempToken = null;
+
+    const resultEl = document.getElementById("result");
+    const roleSelectionEl = document.getElementById("roleSelection");
+    const loginSectionEl = document.getElementById("loginSection");
+
+    function showResult(message, type = "info") {
+      resultEl.className = type;
+      resultEl.innerText = message;
+    }
+
+    // Step 1: Redirect to /api/v1/auth/google
+    document.getElementById("googleLoginBtn").addEventListener("click", () => {
+      showResult("Redirecting to Google...", "info");
+      window.location.href = `${API_BASE}/google`;
+    });
+
+    // Step 2: On page load, check for tokens from callback redirect
+    window.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      const temp = params.get("tempToken");
+
+      // Existing user - got access token
+      if (token) {
+        loginSectionEl.style.display = "none";
+        showResult(`✅ Login successful!\n\nAccess Token:\n${token}`, "success");
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      // New user - got tempToken, show registration form
+      if (temp) {
+        tempToken = temp;
+        loginSectionEl.style.display = "none";
+        roleSelectionEl.style.display = "block";
+        showResult("🆕 New user detected! Please complete your registration below.", "info");
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    });
+
+    // Step 3: Complete registration
+    async function completeRegistration() {
+      const role = document.getElementById("roleSelect").value;
+      const gender = document.getElementById("genderSelect").value;
+      const dateOfBirth = document.getElementById("dobInput").value;
+
+      if (!role || !gender || !dateOfBirth) {
+        showResult("⚠️ Please fill all fields: role, gender, and date of birth.", "error");
+        return;
+      }
+
+      if (!tempToken) {
+        showResult("❌ Missing temporary token. Please restart the Google login flow.", "error");
+        return;
+      }
+
+      showResult("⏳ Completing registration...", "info");
+
+      try {
+        const res = await fetch(`${API_BASE}/google/complete-registration`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            role,
+            gender,
+            dateOfBirth,
+            tempToken
+          })
+        });
+
+        const data = await res.json();
+        
+        if (res.ok && data.status?.toLowerCase() === "success") {
+          roleSelectionEl.style.display = "none";
+          showResult(`✅ Registration complete!\n\n${JSON.stringify(data, null, 2)}`, "success");
+          tempToken = null;
+        } else {
+          showResult(`❌ Registration failed:\n${JSON.stringify(data, null, 2)}`, "error");
+        }
+      } catch (err) {
+        console.error(err);
+        showResult(`❌ Request failed: ${err.message}`, "error");
+      }
+    }
+
+    document.getElementById("completeBtn").addEventListener("click", completeRegistration);
+  </script>
+</body>
+</html>

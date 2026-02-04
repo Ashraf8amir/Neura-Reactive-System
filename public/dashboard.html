@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard - Sahtak</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
+    .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h1 { color: #333; margin-bottom: 10px; }
+    .welcome { color: #28a745; font-size: 22px; margin-bottom: 20px; }
+    .token-box { background: #e8f4fd; padding: 15px; border-radius: 8px; word-break: break-all; font-family: monospace; font-size: 11px; max-height: 150px; overflow-y: auto; }
+    .btn { background: #4285f4; color: white; border: none; padding: 12px 24px; font-size: 16px; cursor: pointer; border-radius: 4px; margin: 10px 5px 10px 0; text-decoration: none; display: inline-block; }
+    .btn:hover { background: #357abd; }
+    .btn-logout { background: #dc3545; }
+    .btn-logout:hover { background: #c82333; }
+    .info { margin: 20px 0; padding: 15px; background: #d4edda; border-radius: 8px; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🏥 Sahtak Dashboard</h1>
+    <div id="content"></div>
+  </div>
+
+  <script>
+    (function() {
+      const API_BASE = window.location.origin + '/api/v1';
+      const contentEl = document.getElementById('content');
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+
+      if (token) {
+        // Store token
+        localStorage.setItem('accessToken', token);
+        
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        contentEl.innerHTML = 
+          '<p class="welcome">✅ Login Successful!</p>' +
+          '<div class="info">' +
+            '<p><strong>Welcome to Sahtak!</strong></p>' +
+            '<p>You are now logged in. Your access token has been stored.</p>' +
+          '</div>' +
+          '<div class="token-box">' +
+            '<strong>Access Token:</strong><br><br>' + token +
+          '</div>' +
+          '<div style="margin-top: 20px;">' +
+            '<a href="/google-test.html" class="btn">← Back to Test Page</a>' +
+            '<button class="btn btn-logout" onclick="logout()">Logout</button>' +
+          '</div>';
+      } else {
+        // Check for stored token
+        const storedToken = localStorage.getItem('accessToken');
+        if (storedToken) {
+          contentEl.innerHTML = 
+            '<p class="welcome">👋 Welcome Back!</p>' +
+            '<div class="info">' +
+              '<p>You have an active session.</p>' +
+            '</div>' +
+            '<div class="token-box">' +
+              '<strong>Stored Access Token:</strong><br><br>' + storedToken +
+            '</div>' +
+            '<div style="margin-top: 20px;">' +
+              '<a href="/google-test.html" class="btn">← Back to Test Page</a>' +
+              '<button class="btn btn-logout" onclick="logout()">Logout</button>' +
+            '</div>';
+        } else {
+          contentEl.innerHTML = 
+            '<p class="welcome error" style="color: #721c24;">❌ Not Logged In</p>' +
+            '<div class="info error">' +
+              '<p>No access token found. Please login first.</p>' +
+            '</div>' +
+            '<a href="/google-test.html" class="btn">← Go to Login</a>';
+        }
+      }
+
+      // Make logout global
+      window.logout = function() {
+        localStorage.removeItem('accessToken');
+        fetch(API_BASE + '/auth/logout', {
+          method: 'POST',
+          credentials: 'include'
+        }).finally(function() {
+          window.location.href = '/google-test.html';
+        });
+      };
+    })();
+  </script>
+</body>
+</html>

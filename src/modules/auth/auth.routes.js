@@ -4,6 +4,8 @@ const rateLimiters = require('../../shared/middlewares/rateLimiter.middleware.js
 const verifyToken = require('../../shared/middlewares/verifyToken.middleware.js');
 const validateReq = require('../../shared/middlewares/validation.middleware.js'); 
 const authValidators = require('./auth.validator.js');
+const passport = require('../../config/passport.js');
+
 
 const router = express.Router();
 
@@ -27,14 +29,20 @@ router.post("/refresh-token",
 );
 
 // ===== Google OAuth Routes =====
-router.get('/google-auth-url', 
-    authController.googleAuthUrl
+router.get('/google',
+    passport.authenticate('google', { 
+      scope: ['profile', 'email'],
+      session: false 
+    })
 );
-router.get('/google-callback', 
-    authController.googleCallback
+router.get('/google/callback',
+  passport.authenticate('google', { 
+    session: false,
+    failureRedirect: '/login'
+  }),
+  authController.googleCallback
 );
-router.post('/complete-google-registration', 
-    validateReq(authValidators.completeGoogleRegistrationSchema),
+router.post('/google/complete-registration', 
     authController.completeGoogleRegistration
 );
 

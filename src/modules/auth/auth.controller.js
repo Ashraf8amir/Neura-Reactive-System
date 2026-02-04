@@ -3,6 +3,7 @@ const { HTTP_STATUS_TEXT } = require('../../shared/constants/enums.js');
 const ApiResponse = require('../../core/apiResponse.js');
 const service = require('./auth.service.js');
 const cookieConfig = require('./auth.helper.js').getCookieConfig();
+const config = require('../../config/config.js');
 
 // ============ Auth Controllers ============
 
@@ -94,87 +95,42 @@ exports.refreshToken = asyncWrapper(async (req, res) => {
 });
 
 // =========== Google OAuth2 Controllers ============
-
-/**
- * @desc    Generate Google OAuth2 authentication URL
- * @route   GET /api/v1/auth/google-auth-url
- * @access  Public
- */
-exports.googleAuthUrl = asyncWrapper(async (req, res) => {
-    const { authUrl, stateString, codeVerifier } = 
-        await service.googleAuthUrlService();
-
-    res.cookie('state', stateString, cookieConfig.state);
-    res.cookie('code_verifier', codeVerifier, cookieConfig.code_verifier);
-
-    return new ApiResponse(
-        res,
-        200,
-        HTTP_STATUS_TEXT.SUCCESS,
-        'Google authentication URL generated successfully',
-        { url: authUrl }
-    );
-});
-
 /**
  * @desc    Handle Google OAuth2 callback
- * @route   GET /api/v1/auth/google-callback
+ * @route   GET /api/v1/auth/google/callback
  * @access  Public
  */
 exports.googleCallback = asyncWrapper(async (req, res) => {
-    const { code, state: receivedState } = req.query;
-    const stateCookie = req.cookies.state;
-    const codeVerifier = req.cookies.code_verifier || req.query.code_verifier || req.body?.code_verifier;
+    const result = await service.googleCallbackService(req.user, req);
 
-    const { user, accessToken, refreshToken, userInfo, isNewUser, tempToken } = 
-          await service.googleCallbackService(code, stateCookie, receivedState, codeVerifier, req);
-    
-
-    if (isNewUser) {
-        res.clearCookie('state', { ...cookieConfig.state, maxAge: 0 });
-        res.clearCookie('code_verifier', { ...cookieConfig.code_verifier, maxAge: 0 });
-
-        return new ApiResponse(
-            res,
-            200,
-            HTTP_STATUS_TEXT.SUCCESS,
-            'Google authentication successful. Please complete your registration.',
-            { isNewUser, tempToken, userInfo }
-        );
+    if (!result.isNewUser) {
+        res.cookie('refreshToken', result.refreshToken, cookieConfig.refresh);
+        return res.redirect(`${config.frontendUrl}/dashboard.html?token=${result.accessToken}`);
     }
-
-    res.cookie('refreshToken', refreshToken, cookieConfig.refresh);
-    res.clearCookie('state', { ...cookieConfig.state, maxAge: 0 });
-    res.clearCookie('code_verifier', { ...cookieConfig.code_verifier, maxAge: 0 });
-
-    return new ApiResponse(
-        res,
-        200,
-        HTTP_STATUS_TEXT.SUCCESS,
-        'Welcome back!',
-        { isNewUser, accessToken, user, userInfo }
+    
+    return res.redirect(
+        `${config.frontendUrl}/complete-registration.html?tempToken=${result.tempToken}`
     );
 });
 
 /**
  * @desc    Complete Google registration for new users
- * @route   POST /api/v1/auth/complete-google-registration
+ * @route   POST /api/v1/auth/google/complete-registration
  * @access  Public
  */
 exports.completeGoogleRegistration = asyncWrapper(async (req, res) => {
-    const userData = req.body;
-
-    const { user, accessToken, refreshToken } =
-        await service.completeGoogleRegistrationService(userData, req);
-
-    res.cookie('refreshToken', refreshToken, cookieConfig.refresh);
+    const result = await service.completeGoogleRegistrationService(
+        req.body,
+        req
+    )
+    res.cookie('refreshToken', result.refreshToken, cookieConfig.refresh);
 
     return new ApiResponse(
         res,
-        200,
+        201,
         HTTP_STATUS_TEXT.SUCCESS,
-        'Google registration completed successfully',
-        { accessToken, user }
+        `${result.user.role} account created successfully. Please complete your profile.`,
+        { user: result.user, accessToken: result.accessToken }
     );
 });
 
