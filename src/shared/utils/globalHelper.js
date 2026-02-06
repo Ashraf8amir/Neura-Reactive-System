@@ -97,6 +97,7 @@ const setRefreshTokenInDB = async (userId, refreshToken, req) => {
         tokenObj => tokenObj.deviceFingerprint === deviceFingerprint
     );
 
+    const existingPrimary = user.refreshTokens.find(rt => rt.isPrimary);
     const tokenData = {
         token: refreshToken,
         expiresAt,
@@ -109,7 +110,10 @@ const setRefreshTokenInDB = async (userId, refreshToken, req) => {
         os: deviceInfo.os,
         deviceType: deviceInfo.deviceType,
         deviceVendor: deviceInfo.deviceVendor,
-        deviceModel: deviceInfo.deviceModel
+        deviceModel: deviceInfo.deviceModel,
+        isPrimary: existingDeviceIndex !== -1
+            ? user.refreshTokens[existingDeviceIndex]?.isPrimary === true
+            : !existingPrimary
     };
 
     if (existingDeviceIndex !== -1) {
@@ -126,7 +130,11 @@ const setRefreshTokenInDB = async (userId, refreshToken, req) => {
     user.activity.loginCount += 1;
 
     await user.save();
-    return true;
+    const sessionId = user.refreshTokens[
+        existingDeviceIndex !== -1 ? existingDeviceIndex : user.refreshTokens.length - 1
+    ]._id.toString();
+
+    return sessionId;
 };
 const buildPatchUpdate = ({ data, basePath = '' }) => {
   const $set = {};

@@ -130,7 +130,7 @@ const userSchema = new mongoose.Schema(
           type: Date,
           default: Date.now,
         },
-
+        isPrimary: { type: Boolean, default: false },
         ipAddress: { type: String, default: "unknown" },
         userAgent: { type: String, default: "Unknown" },
         browser: { type: String, default: "Unknown Browser" },

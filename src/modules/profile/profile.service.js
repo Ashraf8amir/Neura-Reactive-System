@@ -114,6 +114,7 @@ class ProfileService {
                     browser: session.browser,
                     os: session.os,
                 },
+                isPrimary: session.isPrimary,
                 ipAddress: session.ipAddress,
                 createdAt: session.createdAt,
                 lastUsed: session.lastUsed,
@@ -124,18 +125,25 @@ class ProfileService {
         return { activeSessions, count: activeSessions.length };
     }
     async terminateSessionService(userId, sessionId) {
-        const user = await User.findOneAndUpdate(
-            { 
-                _id: userId, 
-                'refreshTokens._id': sessionId 
-            },
-            { $pull: { refreshTokens: { _id: sessionId } } },
-            { new: true }
-        );
+        const user = await User.findById(userId);
 
         if (!user) {
+            throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'User not found');
+        }
+
+        const sessionExists = user.refreshTokens.id(sessionId);
+        if (!sessionExists) {
             throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Session not found');
         }
+        
+        if (sessionExists.isPrimary){
+            throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Cannot terminate primary session');
+        }
+
+        await User.findOneAndUpdate(
+            { _id: userId },
+            { $pull: { refreshTokens: { _id: sessionId } } }
+        );
 
         return { message: 'Session terminated successfully' };
     }

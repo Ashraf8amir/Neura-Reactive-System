@@ -26,7 +26,6 @@ exports.register = asyncWrapper(async (req, res) => {
         { user, accessToken }
     );
 });
-
 /**
  * @desc    Login user
  * @route   POST /api/v1/auth/login

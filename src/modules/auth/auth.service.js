@@ -35,8 +35,9 @@ class AuthService {
         
         const newUser = await new model(userData).save();
 
-        const { accessToken, refreshToken } = authHelper.generateToken(newUser);
-        await setRefreshTokenInDB(newUser._id, refreshToken, req);
+        const refreshToken = authHelper.generateRefreshToken();
+        const sessionId = await setRefreshTokenInDB(newUser._id, refreshToken, req);
+        const accessToken = authHelper.generateAccessToken(newUser, sessionId);
 
         setImmediate(async () => {
             try {
@@ -79,8 +80,9 @@ class AuthService {
 
         await existingUser.save();
 
-        const { accessToken, refreshToken } = authHelper.generateToken(existingUser);
-        await setRefreshTokenInDB(existingUser._id, refreshToken, req);
+        const refreshToken = authHelper.generateRefreshToken();
+        const sessionId = await setRefreshTokenInDB(existingUser._id, refreshToken, req);
+        const accessToken = authHelper.generateAccessToken(existingUser, sessionId);
 
         existingUser.activity.lastLogin = new Date();
         existingUser.activity.loginCount += 1;
@@ -118,8 +120,9 @@ class AuthService {
 
         if (!user) throw new AppError(401, HTTP_STATUS_TEXT.UNAUTHORIZED, 'Invalid or expired refresh token');
 
-        const { accessToken, refreshToken } = authHelper.generateToken(user);
-        await setRefreshTokenInDB(user._id, refreshToken, req);
+        const refreshToken = authHelper.generateRefreshToken();
+        const sessionId = await setRefreshTokenInDB(user._id, refreshToken, req);
+        const accessToken = authHelper.generateAccessToken(user, sessionId);
 
         return { accessToken, refreshToken  };
     }
@@ -127,8 +130,9 @@ class AuthService {
         const { user, isNewUser, userInfo } = data;
 
         if (!isNewUser) {
-            const { accessToken, refreshToken } = authHelper.generateToken(user);
-            await setRefreshTokenInDB(user._id, refreshToken, req);
+            const refreshToken = authHelper.generateRefreshToken();
+            const sessionId = await setRefreshTokenInDB(user._id, refreshToken, req);
+            const accessToken = authHelper.generateAccessToken(user, sessionId);
             return { user, accessToken, refreshToken, isNewUser };
         }
 
@@ -185,8 +189,9 @@ class AuthService {
                 throw new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Invalid role specified'); 
         }
 
-        const { accessToken, refreshToken } = authHelper.generateToken(newUser);
-        await setRefreshTokenInDB(newUser._id, refreshToken, req);
+        const refreshToken = authHelper.generateRefreshToken();
+        const sessionId = await setRefreshTokenInDB(newUser._id, refreshToken, req);
+        const accessToken = authHelper.generateAccessToken(newUser, sessionId);
 
         setImmediate(async () => {
             try {
