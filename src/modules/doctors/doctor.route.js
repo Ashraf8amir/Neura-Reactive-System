@@ -13,12 +13,6 @@ const router = express.Router();
 router.use(verifyToken);
 router.use(authorizeRoles(enums.ROLE.DOCTOR));
 
-// ============ Profile Routes ============
-router.get("/me",
-  doctorController.getMyProfile
-);
-
-// ============ Basic Info Routes ============
 router.get("/me/basic-info",
   doctorController.getBasicInfo
 );
@@ -129,7 +123,6 @@ router.post("/me/documents/syndicate-card",
   validateReq(doctorValidators.uploadSyndicateCardSchema),
   doctorController.uploadSyndicateCard
 );
-
 
 // Submit for Review
 router.post("/me/submit-for-review",

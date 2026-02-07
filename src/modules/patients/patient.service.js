@@ -42,12 +42,11 @@ class PatientService {
 
         if (!patient) throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Patient not found');
 
-        const { missing } = patientHelper.basicInfoCompleteness(patient);
-        if (missing.length === 0 || (missing.length === 1 && missing.includes('profileImage.imageUrl'))) {
-            patient.isActive = true;
+        if (!patient.phone && !patient.address){
+            patient.accountStatus = 'incomplete';
             await patient.save();
         } else {
-            patient.isActive = false;
+            patient.accountStatus = 'active';
             await patient.save();
         }
 

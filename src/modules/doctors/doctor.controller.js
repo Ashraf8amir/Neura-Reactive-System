@@ -3,24 +3,6 @@ const { HTTP_STATUS_TEXT } = require('../../shared/constants/enums.js');
 const ApiResponse = require('../../core/apiResponse');
 const service = require('./doctor.service');
 
-/**
-    *  @desc Get my profile
-    *  @route GET /api/v1/doctors/me
-    *  @access Private (Doctor)
-*/
-exports.getMyProfile = asyncWrapper(async (req, res) => {
-    const doctor = await service.getDoctorById(req.user.id);
-
-    return new ApiResponse(
-        res,
-        200,
-        HTTP_STATUS_TEXT.SUCCESS,
-        'Doctor profile retrieved successfully',
-        { doctor }
-    );
-});
-
-// ============ Basic Info Controller ============
 
 /**
     * @desc Get doctor's basic info

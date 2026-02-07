@@ -11,10 +11,7 @@ const router = express.Router();
 router.use(verifyToken);
 router.use(authorizeRoles(ROLE.PATIENT));
 
-// ============ Profile Routes ============
-router.get('/me',
-    patientController.getMyProfile
-);
+
 router.get('/me/completeness',
     patientController.getProfileCompleteness
 );

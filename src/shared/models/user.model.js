@@ -173,9 +173,8 @@ userSchema.virtual("age").get(function () {
   return null;
 });
 
-userSchema.pre(/^find/, function (next) {
-  this.find({ isDeleted: { $ne: true } });
-  if (typeof next === 'function') next();
+userSchema.pre(/^find/, async function () {
+    this.find({ isDeleted: { $ne: true } });
 });
 userSchema.pre("save", async function () {
   if (this.refreshTokens?.length) {
@@ -185,9 +184,7 @@ userSchema.pre("save", async function () {
   }
 });
 
-userSchema.set("toJSON", {
-  virtuals: true,
-  transform: (doc, ret) => {
+const transformFn = (doc, ret) => {
     delete ret._id;
     delete ret.password;
     delete ret.refreshTokens;
@@ -207,11 +204,10 @@ userSchema.set("toJSON", {
     delete ret.deletedAt;
 
     return ret;
-  },
-});
-userSchema.set("toObject", { 
-  virtuals: true 
-});
+}
+
+userSchema.set("toJSON", { virtuals: true, transform: transformFn });
+userSchema.set("toObject", { virtuals: true, transform: transformFn });
 
 userSchema.index({
   'phone': 1,

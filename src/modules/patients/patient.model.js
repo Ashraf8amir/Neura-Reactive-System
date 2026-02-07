@@ -134,6 +134,14 @@ const patientSchema = new mongoose.Schema({
       email: { type: String, lowercase: true, trim: true, validate: validators.email },
     },
   ],
+  accountStatus: {
+    type: String,
+    enum: {
+      values: Object.values(enums.ACCOUNT_STATUS),
+      message: "{VALUE} is not a valid account status",
+    },
+    default: enums.ACCOUNT_STATUS.INCOMPLETE,
+  },
 });
 
 patientSchema.virtual("bmi").get(function () {

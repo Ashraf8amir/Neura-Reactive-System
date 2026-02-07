@@ -5,23 +5,6 @@ const service = require('./patient.service');
 
 
 /**
-    * @desc    Get logged-in patient's profile
-    * @route   GET /api/v1/patients/me
-    * @access  Private (patient)
-*/
-exports.getMyProfile = asyncWrapper(async (req, res) => {
-    const patient = await service.getPatientByIdService(req.user.id);
-
-    return new ApiResponse(
-        res,
-        200,
-        HTTP_STATUS_TEXT.SUCCESS,
-        'Patient profile retrieved successfully',
-        { patient }
-    );
-});
-
-/**
     * @desc    Get logged-in patient's profile completeness percentage
     * @route   GET /api/v1/patients/me/completeness
     * @access  Private (patient)

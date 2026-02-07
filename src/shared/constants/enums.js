@@ -17,7 +17,8 @@ const ENUMS = Object.freeze({
     CREATED : 'created',
     NO_CONTENT : 'no content',
     LOCKED: 'locked',
-    OK: 'ok'
+    OK: 'ok',
+    CONFLICT: 'conflict'
   },
   GENDERS: { 
     MALE: 'male',
