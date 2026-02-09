@@ -1,5 +1,5 @@
 const joi = require('joi');
-
+const { appointmentConstants } = require('./appointment.constant');
 
 exports.createAppointmentSchema = (data) => {
     const createAppointmentSchema = joi.object({
@@ -112,4 +112,14 @@ exports.createAppointmentSchema = (data) => {
     });
 
     return createAppointmentSchema.validate(data, { abortEarly: false });  
+};
+exports.updateStatusSchema = (data) => {
+    const updateStatusSchema = joi.object({
+        status: joi.string().valid(...Object.values(appointmentConstants.APPOINTMENT_STATUSES)).required().messages({
+            'any.only': 'Invalid status value',
+            'any.required': 'Status is required'
+        })
+    });
+    
+    return updateStatusSchema.validate(data, { abortEarly: false });
 };

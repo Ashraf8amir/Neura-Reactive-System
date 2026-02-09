@@ -144,6 +144,12 @@ const doctorSchema = new mongoose.Schema({
           index: '2dsphere' 
         } 
       },
+      consultationDuration: {
+        type: Number,
+        min: [0, "Consultation duration cannot be negative"],
+        default: 30,
+        required: true,
+      },
       availableHours: [
       {
         day: {
@@ -195,6 +201,12 @@ const doctorSchema = new mongoose.Schema({
       default: 0, 
       min: [0, "Consultation fee cannot be negative"], 
       required: true 
+    },
+    consultationDuration: {
+      type: Number,
+      min: [0, "Consultation duration cannot be negative"],
+      default: 30,
+      required: true,
     },
     availableHours: [
         {

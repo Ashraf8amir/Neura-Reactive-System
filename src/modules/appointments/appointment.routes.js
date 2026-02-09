@@ -9,27 +9,23 @@ const { ROLE } = require('../../shared/constants/enums');
 const router = express.Router();
 
 router.use(verifyToken);
+router.use(authorizeRoles(ROLE.PATIENT, ROLE.DOCTOR, ROLE.ADMIN));
+
 
 router.post('/',
-    authorizeRoles(ROLE.PATIENT, ROLE.DOCTOR, ROLE.ADMIN),
     validateReq(appointmentValidators.createAppointmentSchema),
     appointmentController.createAppointment
 );
-router.get('/',
-    authorizeRoles(ROLE.PATIENT, ROLE.DOCTOR, ROLE.ADMIN),
-    appointmentController.getAllAppointments
+router.get('/', appointmentController.getAllAppointments);
+router.get('/count', appointmentController.countAppointments);
+router.get('/statistics', appointmentController.getAppointmentStatistics);
+router.get('/search', appointmentController.searchAppointments);
+router.get('/today',
+    authorizeRoles(ROLE.DOCTOR),
+    appointmentController.getTodayAppointments
 );
-router.get('/count',
-    authorizeRoles(ROLE.PATIENT, ROLE.DOCTOR, ROLE.ADMIN),
-    appointmentController.countAppointments
-);
-router.get('/statistics',
-    authorizeRoles(ROLE.PATIENT, ROLE.DOCTOR, ROLE.ADMIN),
-    appointmentController.getAppointmentStatistics
-);
-router.get('/search',
-    authorizeRoles(ROLE.PATIENT, ROLE.DOCTOR, ROLE.ADMIN),
-    appointmentController.searchAppointments
-)
+router.get('/upcoming', appointmentController.getUpcomingAppointments);
+router.get('/past', appointmentController.getPastAppointments);
+router.get('/available-slots/:doctorId', appointmentController.getAvailableSlots);
 
 module.exports = router;

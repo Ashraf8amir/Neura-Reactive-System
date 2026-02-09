@@ -103,6 +103,7 @@ exports.setClinicInfoSchema = (data) => {
                 joi.number().required()
             ).length(2).required()
         }).optional(),
+        consultationDuration: joi.number().integer().min(5).max(240).required(),
         availableHours: joi.array().items(
             joi.object({
                 day: joi.string().valid(...Object.values(enums.DAYS_OF_WEEK)).required(),
@@ -138,6 +139,7 @@ exports.updateClinicInfoSchema = (data) => {
                 joi.number().required()
             ).length(2).required()
         }).optional(),
+        consultationDuration: joi.number().integer().min(5).max(240).optional(),
         availableHours: joi.array().items(
             joi.object({
                 day: joi.string().valid(...Object.values(enums.DAYS_OF_WEEK)).required(),

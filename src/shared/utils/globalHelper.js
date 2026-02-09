@@ -146,10 +146,19 @@ const buildPatchUpdate = ({ data, basePath = '' }) => {
 
   return Object.keys($set).length ? { $set } : {};
 };
+const getPagination = (total, page, limit) => ({
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / limit),
+    hasNextPage: page * limit < total,
+    hasPrevPage: page > 1
+});
 
 module.exports = {
     generateDeviceFingerprint,
     parseDeviceInfo,
     setRefreshTokenInDB,
-    buildPatchUpdate
+    buildPatchUpdate,
+    getPagination
 }

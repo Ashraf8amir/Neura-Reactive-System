@@ -1,26 +1,25 @@
 const Appointment = require('./appointment.model');
-const AppError = require('../../core/appError');
-const { HTTP_STATUS_TEXT } = require('../../shared/constants/enums.js');
 const { ROLE } = require('../../shared/constants/enums.js');
+const { appointmentConstants } = require('./appointment.constant');
 
 
 class AppointmentHelpers {
 
 
-    static async isTimeSlotAvailable(doctorId, date, startTime, endTime, excludeAppointmentId = null) {
+    static async isTimeSlotAvailable(doctorId, date, startTime, endTime, session = null, excludeAppointmentId = null) {
         const query = {
-          doctor: doctorId,
-          scheduledDate: date,
-          status: { $nin: ['cancelled', 'no-show'] },
-          'scheduledTime.startTime': { $lt: endTime },
-          'scheduledTime.endTime': { $gt: startTime }
+            doctor: doctorId,
+            scheduledDate: date,
+            status: { $nin: [appointmentConstants.APPOINTMENT_STATUSES.CANCELLED] },
+            'scheduledTime.startTime': { $lt: endTime },
+            'scheduledTime.endTime': { $gt: startTime }
         };
 
         if (excludeAppointmentId) {
-          query._id = { $ne: excludeAppointmentId };
+            query._id = { $ne: excludeAppointmentId };
         }
 
-        const conflictingAppointment = await Appointment.findOne(query);
+        const conflictingAppointment = await Appointment.findOne(query).session(session);
         return !conflictingAppointment;
     }
     static async sendAppointmentConfirmation(appointment) {
@@ -60,49 +59,38 @@ class AppointmentHelpers {
     static buildQueryByRole(user, filters) {
         const query = {};
     
-        if (user.role === ROLE.DOCTOR) {
-            query.doctor = user.id;
-        } else if (user.role === ROLE.PATIENT) {
-            query.patient = user.id;
+        const roleMapping = {
+            [ROLE.DOCTOR]: 'doctor',
+            [ROLE.PATIENT]: 'patient'
+        };
+
+        if (roleMapping[user.role]) {
+            query[roleMapping[user.role]] = user.id;
         }
+
+        const filterMaps = {
+            status: 'status',
+            appointmentType: 'appointmentType',
+            paymentStatus: 'payment.paymentStatus',
+            priority: 'priority',
+            doctorId: user.role !== ROLE.DOCTOR ? 'doctor' : null,
+            patientId: user.role !== ROLE.PATIENT ? 'patient' : null
+        };
+
+        Object.entries(filterMaps).forEach(([filterKey, dbPath]) => {
+            if (dbPath && filters[filterKey]) {
+                query[dbPath] = filters[filterKey];
+            }
+        });
       
-        if (filters.status) {
-            query.status = filters.status;
-        }
-      
-        if (filters.appointmentType) {
-            query.appointmentType = filters.appointmentType;
-        }
-      
-        if (filters.startDate && filters.endDate) {
-            query.scheduledDate = {
-                $gte: new Date(filters.startDate),
-                $lte: new Date(filters.endDate)
-            };
-        } else if (filters.startDate) {
-            query.scheduledDate = { $gte: new Date(filters.startDate) };
-        } else if (filters.endDate) {
-            query.scheduledDate = { $lte: new Date(filters.endDate) };
-        }
-      
-        if (filters.paymentStatus) {
-            query['payment.paymentStatus'] = filters.paymentStatus;
-        }
-      
-        if (filters.priority) {
-            query.priority = filters.priority;
+        if (filters.startDate || filters.endDate) {
+            query.scheduledDate = {};
+            if (filters.startDate) query.scheduledDate.$gte = new Date(filters.startDate);
+            if (filters.endDate) query.scheduledDate.$lte = new Date(filters.endDate);
         }
       
         if (filters.isEmergency !== undefined) {
-            query.isEmergency = filters.isEmergency === 'true';
-        }
-      
-        if (filters.doctorId && user.role !== ROLE.DOCTOR) {
-            query.doctor = filters.doctorId;
-        }
-      
-        if (filters.patientId && user.role !== ROLE.PATIENT) {
-            query.patient = filters.patientId;
+            query.isEmergency = String(filters.isEmergency) === 'true';
         }
       
         return query;
@@ -137,6 +125,39 @@ class AppointmentHelpers {
       fieldsToDelete.forEach(field => delete appointment[field]);
 
       return appointment;
+    }
+    static calculateAvailableSlots(shift, appointments, duration, isToday) {
+        const slots = [];
+
+        const toMins = (t) => {
+            const [h, m] = t.split(':').map(Number);
+            return h * 60 + m;
+        };
+
+        let startMins = toMins(shift.startTime);
+        const endMins = toMins(shift.endTime);
+
+        if (isToday) {
+            const now = new Date();
+            const currentMins = now.getHours() * 60 + now.getMinutes() + 30; 
+            if (currentMins > startMins) startMins = currentMins;
+        }
+
+        const booked = appointments.map(a => ({
+            s: toMins(a.scheduledTime.startTime),
+            e: toMins(a.scheduledTime.endTime)
+        }));
+
+        for (let time = startMins; time + duration <= endMins; time += duration) {
+            const isConflict = booked.some(b => (time < b.e && time + duration > b.s));
+
+            if (!isConflict) {
+                const h = Math.floor(time / 60).toString().padStart(2, '0');
+                const m = (time % 60).toString().padStart(2, '0');
+                slots.push(`${h}:${m}`);
+            }
+        }
+        return slots;
     }
 }
 

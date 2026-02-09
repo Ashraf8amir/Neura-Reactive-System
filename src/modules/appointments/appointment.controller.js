@@ -96,7 +96,7 @@ exports.getAppointmentStatistics = asyncWrapper(async (req, res) => {
     );
 });
 /**
-    * @desc    Search appointments with advanced filters
+    * @desc    Search appointments by appointment number
     * @route   GET /api/v1/appointments/search
     * @access  Private (Patients, Doctors, Admins)
     * @queryParams searchTerm, page, limit, sortOrder
@@ -120,4 +120,100 @@ exports.searchAppointments = asyncWrapper(async (req, res) => {
         pagination
     );
 });
+/**
+    * @desc    Get today's appointments for the authenticated user
+    * @route   GET /api/v1/appointments/today
+    * @access  Private (Doctors)
+*/
+exports.getTodayAppointments = asyncWrapper(async (req, res) => {
+    const result = await service.getTodayAppointments(req.user.id);
 
+    return new ApiResponse(
+        res,
+        200,
+        HTTP_STATUS_TEXT.SUCCESS,
+        'Today\'s appointments retrieved successfully',
+        result
+    );
+});
+/**
+    * @desc    Get upcoming appointments for the authenticated user
+    * @route   GET /api/v1/appointments/upcoming
+    * @access  Private (Patients, Doctors, Admins)
+    * @queryParams page, limit, daysAhead
+*/
+exports.getUpcomingAppointments = asyncWrapper(async (req, res) => {
+    const options = {
+        page: req.query.page || 1,
+        limit: req.query.limit || 10,
+        daysAhead : req.query.daysAhead || 15
+    };
+    const result = await service.getUpcomingAppointments(req.user.id, req.user.role, options);
+
+    return new ApiResponse(
+        res,
+        200,
+        HTTP_STATUS_TEXT.SUCCESS,
+        'Upcoming appointments retrieved successfully',
+        result
+    );
+});
+/**
+    * @desc    Get past appointments for the authenticated user
+    * @route   GET /api/v1/appointments/past
+    * @access  Private (Patients, Doctors, Admins)
+    * @queryParams page, limit, daysBack
+*/
+exports.getPastAppointments = asyncWrapper(async (req, res) => {
+    const options = {
+        page: req.query.page || 1,
+        limit: req.query.limit || 10,
+        daysBack : req.query.daysBack || 30
+    };
+    const result = await service.getPastAppointments(req.user.id, req.user.role, options);
+    
+    return new ApiResponse(
+        res,
+        200,
+        HTTP_STATUS_TEXT.SUCCESS,
+        'Past appointments retrieved successfully',
+        result
+    );
+});
+/**
+    * @desc    Get available time slots for a doctor on a specific date
+    * @route   GET /api/v1/appointments/available-slots/:doctorId
+    * @access  Private (Patients, Doctors, Admins)
+    * @queryParams date (YYYY-MM-DD)
+*/
+exports.getAvailableSlots = asyncWrapper(async (req, res) => {
+    const { doctorId } = req.params;
+    const { date, clinicId, isTelemedicine } = req.query;
+
+    if (!date) {
+        throw new AppError(400, HTTP_STATUS_TEXT.BAD_REQUEST, 'Please provide a date');
+    }
+
+    if (isTelemedicine !== 'true' && !clinicId) {
+        throw new AppError(400, HTTP_STATUS_TEXT.BAD_REQUEST, 'Clinic ID is required for in-person appointments');
+    }
+
+    const slots = await service.getAvailableSlots(
+        doctorId,
+        date,
+        clinicId,
+        isTelemedicine === 'true'
+    );
+
+    return new ApiResponse(
+        res,
+        200,
+        HTTP_STATUS_TEXT.SUCCESS,
+        'Available slots retrieved successfully',
+        {
+            date,
+            totalAvailable: slots.length,
+            slots
+        }
+    );
+});

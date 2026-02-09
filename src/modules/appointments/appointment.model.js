@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const enums = require('../../shared/constants/enums');
 const validators = require('../../shared/validators/common.validator');
+const { appointmentConstants } = require('./appointment.constant');
 
 const appointmentSchema = new mongoose.Schema(
   {
@@ -28,20 +28,20 @@ const appointmentSchema = new mongoose.Schema(
     appointmentType: {
       type: String,
       enum: {
-        values: ['in-person', 'telemedicine', 'emergency', 'consultation'],
+        values: Object.values(appointmentConstants.APPOINTMENT_TYPES),
         message: '{VALUE} is not a valid appointment type'
       },
       required: true,
-      default: 'in-person'
+      default: appointmentConstants.APPOINTMENT_TYPES.IN_PERSON
     },
 
     visitType: {
       type: String,
       enum: {
-        values: ['first-visit', 'follow-up', 'routine-checkup', 'urgent'],
+        values: Object.values(appointmentConstants.VISIT_TYPES),
         message: '{VALUE} is not a valid visit type'
       },
-      default: 'first-visit'
+      default: appointmentConstants.VISIT_TYPES.NEW_PATIENT
     },
 
     scheduledDate: {
@@ -80,10 +80,10 @@ const appointmentSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ['pending', 'confirmed', 'checked-in', 'in-progress', 'completed', 'cancelled', 'rescheduled'],
+        values: Object.values(appointmentConstants.APPOINTMENT_STATUSES),
         message: '{VALUE} is not a valid status'
       },
-      default: 'pending',
+      default: appointmentConstants.APPOINTMENT_STATUSES.PENDING,
       required: true,
       index: true
     },
@@ -147,9 +147,10 @@ const appointmentSchema = new mongoose.Schema(
         name: { type: String, trim: true },
         severity: {
           type: String,
-          enum: ['mild', 'moderate', 'severe']
+          enum: Object.values(appointmentConstants.SYMPTOMS),
+          message: '{VALUE} is not a valid symptom severity'
         },
-        duration: String, // e.g., "3 days", "2 weeks"
+        duration: String, 
         _id: false
       }
     ],
@@ -182,20 +183,6 @@ const appointmentSchema = new mongoose.Schema(
           frequency: String,
           duration: String,
           instructions: String,
-          _id: false
-        }
-      ],
-      labTests: [
-        {
-          testName: String,
-          urgency: {
-            type: String,
-            enum: ['routine', 'urgent', 'stat']
-          },
-          status: {
-            type: String,
-            enum: ['ordered', 'completed', 'cancelled']
-          },
           _id: false
         }
       ],
@@ -270,13 +257,13 @@ const appointmentSchema = new mongoose.Schema(
       },
       paymentStatus: {
         type: String,
-        enum: ['pending', 'paid', 'partially-paid', 'refunded', 'cancelled'],
-        default: 'pending',
+        enum: Object.values(appointmentConstants.PAYMENT_STATUSES),
+        default: appointmentConstants.PAYMENT_STATUSES.PENDING,
         index: true
       },
       paymentMethod: {
         type: String,
-        enum: ['cash', 'credit-card', 'debit-card', 'insurance', 'online', 'other']
+        enum: Object.values(appointmentConstants.PAYMENT_METHODS)
       },
       paidAt: Date,
       transactionId: String,
@@ -372,8 +359,8 @@ const appointmentSchema = new mongoose.Schema(
 
     priority: {
       type: String,
-      enum: ['low', 'normal', 'high', 'urgent'],
-      default: 'normal',
+      enum: Object.values(appointmentConstants.PRIORITIES),
+      default: appointmentConstants.PRIORITIES.MEDIUM,
       index: true
     },
 
