@@ -8,6 +8,8 @@ const AppointmentHelpers = require('./appointment.helper');
 const logger = require('../../core/logger.js');
 const { getPagination } = require('../../shared/utils/globalHelper.js');
 const { appointmentConstants } = require('./appointment.constant');
+const PaymentRecord = require('../payments/payment.model');
+const { paymentConstants } = require('../payments/payment.constant');
 
 
 class AppointmentService {
@@ -17,7 +19,7 @@ class AppointmentService {
     paymentStatuses = appointmentConstants.PAYMENT_STATUSES;
 
     async createAppointment(appointmentData, user) {
-        const { doctorId, clinic, ...rest } = appointmentData;
+        const { doctorId, clinicId, ...rest } = appointmentData;
 
         const patientId = user.role === ROLE.PATIENT ? user.id : appointmentData.patientId;
         if (!patientId) {
@@ -61,28 +63,65 @@ class AppointmentService {
                 throw new AppError(409, HTTP_STATUS_TEXT.CONFLICT, 'Time slot is not available');
             }
         
-            const clinicInfo = doctor.clinicInfo?.id(clinic?.clinicId);
+            const clinicInfo = doctor.clinicInfo?.id(clinicId);
             if (!clinicInfo) {
                 throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Clinic not found for the doctor');
             }
         
             const appointmentLocation  = {
-                clinicId: clinic.clinicId,
+                clinicId: clinicInfo._id,
                 clinicName: clinicInfo.clinicName,
                 address: clinicInfo.address,
                 location: clinicInfo.location
             };
         
+            const consultationFee = clinicInfo.consultationFee || 0;
+            const commissionAmount = (consultationFee * 0.1); 
+
             const newAppointment = new Appointment({
                 ...rest,
                 doctor: doctorId,
                 patient: patientId,
                 status: this.statuses.PENDING,
                 clinic: appointmentLocation,
+                payment: {
+                    consultationFee: consultationFee,
+                    totalAmount: consultationFee,
+                    paymentMethod: appointmentData.paymentMethod,
+                    paymentStatus: appointmentConstants.PAYMENT_STATUSES.PENDING
+                },
                 priority: appointmentData.appointmentType === this.appointmentTypes.EMERGENCY ? 'urgent' : 'normal'
             });
-        
             await newAppointment.save({ session });
+
+            const paymentRecord = new PaymentRecord({
+                payer: { user: patientId, role: ROLE.PATIENT },
+                receiver: { user: doctorId, role: ROLE.DOCTOR },
+                transactionType: paymentConstants.TRANSACTION_TYPES.APPOINTMENT,
+                appointment: newAppointment._id,
+                amount: {
+                    total: consultationFee,
+                    subtotal: consultationFee,
+                },
+                commission: {
+                    percentage: 10,
+                    amount: commissionAmount,
+                    receiverAmount: consultationFee - commissionAmount
+                },
+                paymentMethod: appointmentData.paymentMethod,
+                status: paymentConstants.STATUS.PENDING
+            });
+            await paymentRecord.save({ session });
+
+            newAppointment.payment.paymentId = paymentRecord._id;
+            await newAppointment.save({ session });
+
+            let paymentData = null;
+            if (['card', 'wallet'].includes(appointmentData.paymentMethod)) {
+                // نداء لـ Paymob Service (سيتم برمجتها لاحقاً)
+                // paymentData = await paymobService.getPaymentLink(newAppointment, paymentRecord);
+            }
+
             await session.commitTransaction();
         
             await newAppointment.populate([
@@ -97,7 +136,11 @@ class AppointmentService {
                 duration: Date.now() - newAppointment.createdAt.getTime()
             });
         
-            return newAppointment;
+            return {
+                appointment: newAppointment,
+                paymentInitiated: !!paymentData,
+                paymentUrl: paymentData?.url
+            };
         } catch (error) {
             await session.abortTransaction();
             logger.error('Error creating appointment', { error, doctorId, patientId });
@@ -492,14 +535,15 @@ class AppointmentService {
         const dayShifts = workingHours.filter(h => h.day === dayName);
         if (!dayShifts.length) return [];
 
-        const existingAppointments = await Appointment.find({
+        const query = {
             doctor: doctorId,
             scheduledDate: {
                 $gte: new Date(selectedDate.setHours(0,0,0,0)),
                 $lte: new Date(selectedDate.setHours(23,59,59,999))
             },
             status: { $in: [this.statuses.PENDING, this.statuses.CONFIRMED] }
-        }).select('scheduledTime');
+        };
+        const existingAppointments = await Appointment.find(query).select('scheduledTime');
 
         let allSlots = [];
         dayShifts.forEach(shift => {

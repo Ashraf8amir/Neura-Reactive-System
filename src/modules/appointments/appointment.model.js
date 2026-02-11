@@ -17,31 +17,12 @@ const appointmentSchema = new mongoose.Schema(
       required: [true, 'Patient is required'],
       index: true
     },
-    
+
     doctor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: [true, 'Doctor is required'],
       index: true
-    },
-
-    appointmentType: {
-      type: String,
-      enum: {
-        values: Object.values(appointmentConstants.APPOINTMENT_TYPES),
-        message: '{VALUE} is not a valid appointment type'
-      },
-      required: true,
-      default: appointmentConstants.APPOINTMENT_TYPES.IN_PERSON
-    },
-
-    visitType: {
-      type: String,
-      enum: {
-        values: Object.values(appointmentConstants.VISIT_TYPES),
-        message: '{VALUE} is not a valid visit type'
-      },
-      default: appointmentConstants.VISIT_TYPES.NEW_PATIENT
     },
 
     scheduledDate: {
@@ -68,6 +49,88 @@ const appointmentSchema = new mongoose.Schema(
         }
       },
       _id: false
+    },
+
+    clinic: {
+      clinicId: {
+        type: mongoose.Schema.Types.ObjectId,
+        index: true
+      },
+      clinicName: String,
+      address: {
+        governorate: String,
+        city: String,
+        street: String,
+        buildingNumber: String,
+        floor: String,
+        landmark: String
+      },
+      location: {
+        type: { type: String, default: 'Point' },
+        coordinates: [Number]
+      },
+      _id: false
+    },
+
+    telemedicineDetails: {
+      meetingLink: String,
+      meetingId: String,
+      meetingPassword: String,
+      platform: {
+        type: String,
+        enum: ['zoom', 'google-meet', 'custom', 'other']
+      },
+      _id: false
+    },
+
+    patientProvidedInfo: {
+
+      appointmentType: {
+        type: String,
+        enum: {
+          values: Object.values(appointmentConstants.APPOINTMENT_TYPES),
+          message: '{VALUE} is not a valid appointment type'
+        },
+        required: true,
+        default: appointmentConstants.APPOINTMENT_TYPES.IN_PERSON
+      },
+
+       visitType: {
+        type: String,
+        enum: {
+          values: Object.values(appointmentConstants.VISIT_TYPES),
+          message: '{VALUE} is not a valid visit type'
+        },
+        default: appointmentConstants.VISIT_TYPES.NEW_PATIENT
+      },
+
+      reasonForVisit: {
+        type: String,
+        trim: true,
+        maxlength: [500, 'Reason for visit cannot exceed 500 characters']
+      },
+
+      patientNotes: {
+        type: String,
+        trim: true,
+        maxlength: [1000, 'Patient notes cannot exceed 1000 characters']
+      },
+
+      attachments: [
+        {
+          fileName: String,
+          fileUrl: String,
+          description: String,
+          uploadedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+          },
+          uploadedAt: {
+            type: Date,
+            default: Date.now
+          },
+        }
+      ]
     },
 
     duration: {
@@ -104,44 +167,6 @@ const appointmentSchema = new mongoose.Schema(
       }
     ],
 
-    clinic: {
-      clinicId: {
-        type: mongoose.Schema.Types.ObjectId,
-        index: true
-      },
-      clinicName: String,
-      address: {
-        governorate: String,
-        city: String,
-        street: String,
-        buildingNumber: String,
-        floor: String,
-        landmark: String
-      },
-      location: {
-        type: { type: String, default: 'Point' },
-        coordinates: [Number]
-      },
-      _id: false
-    },
-
-    telemedicineDetails: {
-      meetingLink: String,
-      meetingId: String,
-      meetingPassword: String,
-      platform: {
-        type: String,
-        enum: ['zoom', 'google-meet', 'custom', 'other']
-      },
-      _id: false
-    },
-
-    reasonForVisit: {
-      type: String,
-      trim: true,
-      maxlength: [500, 'Reason for visit cannot exceed 500 characters']
-    },
-
     symptoms: [
       {
         name: { type: String, trim: true },
@@ -156,11 +181,6 @@ const appointmentSchema = new mongoose.Schema(
     ],
 
     notes: {
-      patientNotes: {
-        type: String,
-        trim: true,
-        maxlength: [1000, 'Patient notes cannot exceed 1000 characters']
-      },
       doctorNotes: {
         type: String,
         trim: true,
@@ -173,6 +193,29 @@ const appointmentSchema = new mongoose.Schema(
       }
     },
 
+    referrals: [
+      {
+        specialization: {
+          type: String,
+          trim: true
+        },
+        doctorName: {
+          type: String,
+          trim: true
+        },
+        reason: {
+          type: String,
+          required: true,
+          trim: true
+        },
+        urgency: {
+          type: String,
+          enum: ['routine', 'urgent', 'emergency'],
+          default: 'routine'
+        }
+      }
+    ],
+    
     visitSummary: {
       diagnosis: String,
       treatmentPlan: String,
@@ -221,52 +264,24 @@ const appointmentSchema = new mongoose.Schema(
       _id: false
     },
 
-    attachments: [
-      {
-        fileName: String,
-        fileUrl: String,
-        fileType: {
-          type: String,
-          enum: ['image', 'pdf', 'document', 'lab-result', 'xray', 'other']
-        },
-        uploadedBy: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'User'
-        },
-        uploadedAt: {
-          type: Date,
-          default: Date.now
-        },
-        description: String
-      }
-    ],
-
     payment: {
-      consultationFee: {
-        type: Number,
-        required: true,
-        min: [0, 'Fee cannot be negative']
+      paymentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Payment',
+        index: true
       },
-      discount: {
-        type: Number,
-        default: 0,
-        min: [0, 'Discount cannot be negative']
-      },
-      totalAmount: {
-        type: Number,
-      },
-      paymentStatus: {
+      status: {
         type: String,
         enum: Object.values(appointmentConstants.PAYMENT_STATUSES),
         default: appointmentConstants.PAYMENT_STATUSES.PENDING,
         index: true
       },
-      paymentMethod: {
+      method: {
         type: String,
         enum: Object.values(appointmentConstants.PAYMENT_METHODS)
       },
-      paidAt: Date,
-      transactionId: String,
+      consultationFee: { type: Number, required: true },
+      totalAmount: { type: Number },
       _id: false
     },
 
@@ -303,7 +318,7 @@ const appointmentSchema = new mongoose.Schema(
       refundAmount: Number,
       refundStatus: {
         type: String,
-        enum: ['not-applicable', 'pending', 'processed', 'rejected']
+        enum: Object.values(appointmentConstants.REFUND_STATUSES)
       },
       _id: false
     },
@@ -327,7 +342,6 @@ const appointmentSchema = new mongoose.Schema(
       _id: false
     },
 
-    // Reminders & Notifications
     reminders: [
       {
         type: {
@@ -353,7 +367,6 @@ const appointmentSchema = new mongoose.Schema(
       _id: false
     },
 
-    // Consultation Completion
     completedAt: Date,
     actualDuration: Number, 
 
@@ -450,6 +463,9 @@ appointmentSchema.virtual('canBeRescheduled').get(function() {
 });
 
 // ==================== PRE HOOKS ====================
+appointmentSchema.pre(/^find/, async function() {
+  this.find({ isDeleted: { $ne: true } });
+});
 appointmentSchema.pre('validate', async function() {
   if (this.isNew && !this.appointmentNumber) {
     const date = new Date();
@@ -467,16 +483,6 @@ appointmentSchema.pre('validate', async function() {
     this.appointmentNumber = `APT-${year}${month}${day}-${String(count + 1).padStart(4, '0')}`;
   }
 });
-
-appointmentSchema.pre('save', async function() {
-  if (this.payment && this.payment.consultationFee !== undefined) {
-    const fee = this.payment.consultationFee || 0;
-    const discount = this.payment.discount || 0;
-    this.payment.totalAmount = fee - discount;
-  }
-  
-});
-
 appointmentSchema.pre('save', async function() {
   if (this.isModified('status')) {
     this.statusHistory.push({
@@ -488,7 +494,7 @@ appointmentSchema.pre('save', async function() {
 
 // ==================== METHODS ====================
 appointmentSchema.methods.cancel = function(userId, reason) {
-  this.status = 'cancelled';
+  this.status = appointmentConstants.APPOINTMENT_STATUSES.CANCELLED;
   this.cancellation = {
     cancelledBy: userId,
     cancelledAt: new Date(),
@@ -509,13 +515,13 @@ appointmentSchema.methods.reschedule = function(userId, newDate, newTime, reason
   
   this.scheduledDate = newDate;
   this.scheduledTime = newTime;
-  this.status = 'rescheduled';
+  this.status = appointmentConstants.APPOINTMENT_STATUSES.RESCHEDULED;
   
   return this.save();
 };
 
 appointmentSchema.methods.performCheckIn = function(userId, queueNumber) {
-  this.status = 'checked-in';
+  this.status = appointmentConstants.APPOINTMENT_STATUSES.CHECKEDIN;
   this.checkIn = {
     checkedInAt: new Date(),
     checkedInBy: userId,
@@ -525,14 +531,13 @@ appointmentSchema.methods.performCheckIn = function(userId, queueNumber) {
 };
 
 appointmentSchema.methods.complete = function(visitData) {
-  this.status = 'completed';
+  this.status = appointmentConstants.APPOINTMENT_STATUSES.COMPLETED;
   this.completedAt = new Date();
   
   if (visitData) {
     this.visitSummary = { ...this.visitSummary, ...visitData };
   }
   
-  // Calculate actual duration
   if (this.checkIn?.checkedInAt) {
     const duration = (new Date() - this.checkIn.checkedInAt) / (1000 * 60);
     this.actualDuration = Math.round(duration);
@@ -555,7 +560,7 @@ appointmentSchema.statics.getUpcomingForDoctor = function(doctorId, limit = 10) 
   return this.find({
     doctor: doctorId,
     scheduledDate: { $gte: new Date() },
-    status: { $in: ['pending', 'confirmed', 'checked-in'] }
+    status: { $in: [appointmentConstants.APPOINTMENT_STATUSES.PENDING, appointmentConstants.APPOINTMENT_STATUSES.CONFIRMED, appointmentConstants.APPOINTMENT_STATUSES.CHECKEDIN] }
   })
   .sort({ scheduledDate: 1 })
   .limit(limit)
@@ -566,7 +571,7 @@ appointmentSchema.statics.getUpcomingForPatient = function(patientId, limit = 10
   return this.find({
     patient: patientId,
     scheduledDate: { $gte: new Date() },
-    status: { $in: ['pending', 'confirmed'] }
+    status: { $in: [appointmentConstants.APPOINTMENT_STATUSES.PENDING, appointmentConstants.APPOINTMENT_STATUSES.CONFIRMED] }
   })
   .sort({ scheduledDate: 1 })
   .limit(limit)
@@ -582,7 +587,7 @@ appointmentSchema.statics.getTodayAppointments = function(doctorId) {
   return this.find({
     doctor: doctorId,
     scheduledDate: { $gte: today, $lt: tomorrow },
-    status: { $nin: ['cancelled', 'no-show'] }
+    status: { $nin: [appointmentConstants.APPOINTMENT_STATUSES.CANCELLED] }
   })
   .sort({ 'scheduledTime.startTime': 1 })
   .populate('patient', 'firstName lastName phone');
@@ -592,7 +597,7 @@ appointmentSchema.statics.checkAvailability = function(doctorId, date, startTime
   return this.findOne({
     doctor: doctorId,
     scheduledDate: date,
-    status: { $nin: ['cancelled', 'no-show'] },
+    status: { $nin: [appointmentConstants.APPOINTMENT_STATUSES.CANCELLED] },
     'scheduledTime.startTime': { $lt: endTime },
     'scheduledTime.endTime': { $gt: startTime }
     

@@ -4,7 +4,8 @@ const ENUMS = Object.freeze({
     PATIENT: 'patient',
     NURSE: 'nurse',
     PHARMACY: 'pharmacy',
-    ADMIN: 'admin'
+    ADMIN: 'admin',
+    PLATFORM: 'platform'
   },
   HTTP_STATUS_TEXT:{
     SUCCESS : 'success',

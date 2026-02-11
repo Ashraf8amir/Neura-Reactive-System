@@ -24,6 +24,7 @@ exports.appointmentConstants = Object.freeze({
         LOW: 'low',
         MEDIUM: 'medium',
         HIGH: 'high',
+        NORMAL: 'normal',
         URGENT: 'urgent'
     },
     PAYMENT_STATUSES: {
@@ -36,15 +37,20 @@ exports.appointmentConstants = Object.freeze({
     },
     PAYMENT_METHODS: {
         CASH: 'cash',
-        CREDIT_CARD: 'creditCard',
-        DEBIT_CARD: 'debitCard',
+        WALLET: 'wallet',
+        CARD: 'card',
         INSURANCE: 'insurance',
-        ONLINE: 'online',
-        OTHER: 'other'
     },
     SYMPTOMS: {
         MILD: 'mild',
         MODERATE: 'moderate',
         SEVERE: 'severe'
+    },
+    REFUND_STATUSES: {
+        PENDING: 'pending',
+        APPROVED: 'approved',
+        REJECTED: 'rejected',
+        PROCESSED: 'processed',
+        NOT_APPLICABLE: 'notApplicable'
     }
 });
