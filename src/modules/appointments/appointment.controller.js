@@ -5,6 +5,44 @@ const ApiResponse = require('../../core/apiResponse');
 const service = require('./appointment.service');
 
 
+
+/**
+    * @desc    Get available time slots for a doctor on a specific date
+    * @route   GET /api/v1/appointments/available-slots/:doctorId
+    * @access  Private (Patients, Doctors, Admins)
+    * @queryParams date (YYYY-MM-DD)
+*/
+exports.getAvailableSlots = asyncWrapper(async (req, res) => {
+    const { doctorId } = req.params;
+    const { date, clinicId, isTelemedicine } = req.query;
+
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || (date < new Date().toLocaleDateString('en-CA'))) {
+        throw new AppError(400, HTTP_STATUS_TEXT.BAD_REQUEST, 'Please provide a valid date in YYYY-MM-DD format');
+    }
+
+    if (isTelemedicine !== 'true' && !clinicId) {
+        throw new AppError(400, HTTP_STATUS_TEXT.BAD_REQUEST, 'Clinic ID is required for in-person appointments');
+    }
+
+    const slots = await service.getAvailableSlots(
+        doctorId,
+        date,
+        clinicId,
+        isTelemedicine === 'true'
+    );
+
+    return new ApiResponse(
+        res,
+        200,
+        HTTP_STATUS_TEXT.SUCCESS,
+        'Available slots retrieved successfully',
+        {
+            date,
+            totalAvailable: slots.length,
+            slots
+        }
+    );
+});
 /**
     * @desc    Create a new appointment
     * @route   POST /api/v1/appointments
@@ -178,42 +216,5 @@ exports.getPastAppointments = asyncWrapper(async (req, res) => {
         HTTP_STATUS_TEXT.SUCCESS,
         'Past appointments retrieved successfully',
         result
-    );
-});
-/**
-    * @desc    Get available time slots for a doctor on a specific date
-    * @route   GET /api/v1/appointments/available-slots/:doctorId
-    * @access  Private (Patients, Doctors, Admins)
-    * @queryParams date (YYYY-MM-DD)
-*/
-exports.getAvailableSlots = asyncWrapper(async (req, res) => {
-    const { doctorId } = req.params;
-    const { date, clinicId, isTelemedicine } = req.query;
-
-    if (!date) {
-        throw new AppError(400, HTTP_STATUS_TEXT.BAD_REQUEST, 'Please provide a date');
-    }
-
-    if (isTelemedicine !== 'true' && !clinicId) {
-        throw new AppError(400, HTTP_STATUS_TEXT.BAD_REQUEST, 'Clinic ID is required for in-person appointments');
-    }
-
-    const slots = await service.getAvailableSlots(
-        doctorId,
-        date,
-        clinicId,
-        isTelemedicine === 'true'
-    );
-
-    return new ApiResponse(
-        res,
-        200,
-        HTTP_STATUS_TEXT.SUCCESS,
-        'Available slots retrieved successfully',
-        {
-            date,
-            totalAvailable: slots.length,
-            slots
-        }
     );
 });

@@ -30,6 +30,12 @@ const config = {
     cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
 
     jobSecretKey: process.env.JOB_SECRET_KEY,
+
+    paymobApiKey: process.env.PAYMOB_API_KEY,
+    paymobIntegrationIdCard: process.env.PAYMOB_INTEGRATION_ID_CARD,
+    paymobIntegrationIdWallet: process.env.PAYMOB_INTEGRATION_ID_WALLET,
+    paymobIframeId: process.env.PAYMOB_IFRAME_ID,
+    paymobHmacSecret: process.env.PAYMOB_HMAC_SECRET
 };
 
 module.exports = config;

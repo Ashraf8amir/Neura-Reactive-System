@@ -51,6 +51,16 @@ const appointmentSchema = new mongoose.Schema(
       _id: false
     },
 
+    appointmentType: {
+      type: String,
+      enum: {
+        values: Object.values(appointmentConstants.APPOINTMENT_TYPES),
+        message: '{VALUE} is not a valid appointment type'
+      },
+      required: true,
+      default: appointmentConstants.APPOINTMENT_TYPES.IN_PERSON
+    },
+
     clinic: {
       clinicId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -84,16 +94,6 @@ const appointmentSchema = new mongoose.Schema(
     },
 
     patientProvidedInfo: {
-
-      appointmentType: {
-        type: String,
-        enum: {
-          values: Object.values(appointmentConstants.APPOINTMENT_TYPES),
-          message: '{VALUE} is not a valid appointment type'
-        },
-        required: true,
-        default: appointmentConstants.APPOINTMENT_TYPES.IN_PERSON
-      },
 
        visitType: {
         type: String,
@@ -270,18 +270,14 @@ const appointmentSchema = new mongoose.Schema(
         ref: 'Payment',
         index: true
       },
-      status: {
-        type: String,
-        enum: Object.values(appointmentConstants.PAYMENT_STATUSES),
-        default: appointmentConstants.PAYMENT_STATUSES.PENDING,
-        index: true
-      },
       method: {
         type: String,
         enum: Object.values(appointmentConstants.PAYMENT_METHODS)
       },
       consultationFee: { type: Number, required: true },
       totalAmount: { type: Number },
+      paid: { type: Boolean, default: false },
+      paidAt: Date,
       _id: false
     },
 

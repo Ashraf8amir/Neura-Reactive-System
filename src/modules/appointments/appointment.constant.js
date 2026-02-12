@@ -5,14 +5,14 @@ exports.appointmentConstants = Object.freeze({
         CHECKEDIN: 'checkedIn',
         INPROGRESS: 'inProgress',
         COMPLETED: 'completed',
-        CANCELLED: 'cancelled',
-        RESCHEDULED: 'rescheduled'
+        CANCELLED: 'cancelled'
     },
     APPOINTMENT_TYPES: {
         IN_PERSON: 'inPerson',
         TELEMEDICINE: 'telemedicine',
         EMERGENCY: 'emergency',
-        CONSULTATION: 'consultation'
+        CONSULTATION: 'consultation',
+        FOLLOW_UP: 'followUp',
     },
     VISIT_TYPES: {
         NEW_PATIENT: 'newPatient',

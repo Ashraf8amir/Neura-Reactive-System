@@ -55,7 +55,6 @@ const paymentSchema = new mongoose.Schema({
             required: true,
             min: [0, 'Amount cannot be negative']
         },
-        subtotal: Number,
         tax: { type: Number, default: 0 },
         discount: { type: Number, default: 0 },
         deliveryFee: { type: Number, default: 0 }
@@ -126,7 +125,8 @@ const paymentSchema = new mongoose.Schema({
     metadata: {
         description: String,
         notes: String,
-        additionalInfo: mongoose.Schema.Types.Mixed
+        appointmentDate: Date,
+        additionalInfo: mongoose.Schema.Types.Mixed,
     }
 
 }, {

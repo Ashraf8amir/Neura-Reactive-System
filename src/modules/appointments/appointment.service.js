@@ -8,8 +8,7 @@ const AppointmentHelpers = require('./appointment.helper');
 const logger = require('../../core/logger.js');
 const { getPagination } = require('../../shared/utils/globalHelper.js');
 const { appointmentConstants } = require('./appointment.constant');
-const PaymentRecord = require('../payments/payment.model');
-const { paymentConstants } = require('../payments/payment.constant');
+const paymentService = require('../payments/payment.service');
 
 
 class AppointmentService {
@@ -18,6 +17,50 @@ class AppointmentService {
     appointmentTypes = appointmentConstants.APPOINTMENT_TYPES;
     paymentStatuses = appointmentConstants.PAYMENT_STATUSES;
 
+    async getAvailableSlots(doctorId, date, clinicId, isTelemedicine = false) {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        const dayName = startOfDay.toLocaleDateString('en-US', { weekday: 'long' });
+        const isToday = new Date().toDateString() === startOfDay.toDateString();
+
+        const doctor = await Doctor.findById(doctorId);
+        if (!doctor) throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Doctor not found');
+
+        let workingHours = [];
+        let duration = 30;
+
+        if (isTelemedicine) {
+            workingHours = doctor.telemedicine.availableHours;
+            duration = doctor.telemedicine.consultationDuration;
+        } else {
+            const clinic = doctor.clinicInfo.id(clinicId);
+            if (!clinic) throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Clinic not found');
+            workingHours = clinic.availableHours;
+            duration = clinic.consultationDuration;
+        }
+
+        const dayShifts = workingHours.filter(h => h.day === dayName);
+        if (!dayShifts.length) return [];
+
+        const query = {
+            doctor: doctorId,
+            scheduledDate: { $gte: startOfDay, $lte: endOfDay },
+            status: { $in: [this.statuses.PENDING, this.statuses.CONFIRMED] }
+        };
+        const existingAppointments = await Appointment.find(query).select('scheduledTime');
+
+        let allSlots = [];
+        dayShifts.forEach(shift => {
+            const slots = AppointmentHelpers.calculateAvailableSlots(shift, existingAppointments, duration, isToday);
+            allSlots = [...allSlots, ...slots];
+        });
+
+        return allSlots.sort((a, b) => a.startTime.localeCompare(b.startTime)); 
+    }
     async createAppointment(appointmentData, user) {
         const { doctorId, clinicId, ...rest } = appointmentData;
 
@@ -67,6 +110,20 @@ class AppointmentService {
             if (!clinicInfo) {
                 throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Clinic not found for the doctor');
             }
+
+            let consultationFee = 0;
+            switch (appointmentData.appointmentType) {
+                case this.appointmentTypes.FOLLOW_UP:
+                    consultationFee = clinicInfo.followUpFee || 0;
+                    break;
+                case this.appointmentTypes.TELEMEDICINE:
+                    consultationFee = doctor.telemedicine?.consultationFee || clinicInfo.consultationFee || 0;
+                    break;
+                case this.appointmentTypes.CONSULTATION:
+                default:
+                    consultationFee = clinicInfo.consultationFee || 0;
+                    break;
+            }
         
             const appointmentLocation  = {
                 clinicId: clinicInfo._id,
@@ -75,9 +132,6 @@ class AppointmentService {
                 location: clinicInfo.location
             };
         
-            const consultationFee = clinicInfo.consultationFee || 0;
-            const commissionAmount = (consultationFee * 0.1); 
-
             const newAppointment = new Appointment({
                 ...rest,
                 doctor: doctorId,
@@ -87,42 +141,24 @@ class AppointmentService {
                 payment: {
                     consultationFee: consultationFee,
                     totalAmount: consultationFee,
-                    paymentMethod: appointmentData.paymentMethod,
-                    paymentStatus: appointmentConstants.PAYMENT_STATUSES.PENDING
+                    method: appointmentData.paymentMethod
                 },
                 priority: appointmentData.appointmentType === this.appointmentTypes.EMERGENCY ? 'urgent' : 'normal'
             });
-            await newAppointment.save({ session });
 
-            const paymentRecord = new PaymentRecord({
-                payer: { user: patientId, role: ROLE.PATIENT },
-                receiver: { user: doctorId, role: ROLE.DOCTOR },
-                transactionType: paymentConstants.TRANSACTION_TYPES.APPOINTMENT,
-                appointment: newAppointment._id,
-                amount: {
-                    total: consultationFee,
-                    subtotal: consultationFee,
-                },
-                commission: {
-                    percentage: 10,
-                    amount: commissionAmount,
-                    receiverAmount: consultationFee - commissionAmount
-                },
-                paymentMethod: appointmentData.paymentMethod,
-                status: paymentConstants.STATUS.PENDING
-            });
-            await paymentRecord.save({ session });
-
-            newAppointment.payment.paymentId = paymentRecord._id;
             await newAppointment.save({ session });
+            await session.commitTransaction();
+            session.endSession();
 
             let paymentData = null;
             if (['card', 'wallet'].includes(appointmentData.paymentMethod)) {
-                // نداء لـ Paymob Service (سيتم برمجتها لاحقاً)
-                // paymentData = await paymobService.getPaymentLink(newAppointment, paymentRecord);
+                paymentData = await paymentService.initiateAppointmentPaymentService(
+                    patientId,
+                    newAppointment._id,
+                    appointmentData.paymentMethod,
+                    consultationFee
+                );
             }
-
-            await session.commitTransaction();
         
             await newAppointment.populate([
             { path: 'doctor', select: 'firstName lastName professionalInfo.primarySpecialization' },
@@ -139,7 +175,7 @@ class AppointmentService {
             return {
                 appointment: newAppointment,
                 paymentInitiated: !!paymentData,
-                paymentUrl: paymentData?.url
+                paymentUrl: paymentData?.iframeUrl
             };
         } catch (error) {
             await session.abortTransaction();
@@ -511,48 +547,7 @@ class AppointmentService {
             pagination: getPagination(appointments.length, options.page, options.limit)
         };
     }
-    async getAvailableSlots(doctorId, date, clinicId, isTelemedicine = false) {
-        const selectedDate = new Date(date);
-        const dayName = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
-        const isToday = new Date().toDateString() === selectedDate.toDateString();
-
-        const doctor = await Doctor.findById(doctorId);
-        if (!doctor) throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Doctor not found');
-
-        let workingHours = [];
-        let duration = 30;
-
-        if (isTelemedicine) {
-            workingHours = doctor.telemedicine.availableHours;
-            duration = doctor.telemedicine.consultationDuration;
-        } else {
-            const clinic = doctor.clinicInfo.id(clinicId);
-            if (!clinic) throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Clinic not found');
-            workingHours = clinic.availableHours;
-            duration = clinic.consultationDuration;
-        }
-
-        const dayShifts = workingHours.filter(h => h.day === dayName);
-        if (!dayShifts.length) return [];
-
-        const query = {
-            doctor: doctorId,
-            scheduledDate: {
-                $gte: new Date(selectedDate.setHours(0,0,0,0)),
-                $lte: new Date(selectedDate.setHours(23,59,59,999))
-            },
-            status: { $in: [this.statuses.PENDING, this.statuses.CONFIRMED] }
-        };
-        const existingAppointments = await Appointment.find(query).select('scheduledTime');
-
-        let allSlots = [];
-        dayShifts.forEach(shift => {
-            const slots = AppointmentHelpers.calculateAvailableSlots(shift, existingAppointments, duration, isToday);
-            allSlots = [...allSlots, ...slots];
-        });
-
-        return allSlots; 
-    }
+    
 
 }
 
