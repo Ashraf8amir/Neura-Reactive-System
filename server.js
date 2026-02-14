@@ -2,6 +2,7 @@ const app = require('./src/app.js');
 const config = require('./src/config/config.js');
 const connectDB = require('./src/config/database.js');
 const logger = require('./src/core/logger.js');
+const initJobs = require('./src/jobs/index');
 
 let server;
 
@@ -70,6 +71,9 @@ const startServer = async () => {
         logger.info('Connecting to MongoDB...', { url: config.mongoURL.replace(/\/\/.*:.*@/, '//***:***@') });
         await connectDB(config.mongoURL);
         logger.info('MongoDB connected successfully');
+
+        logger.info('Initializing scheduled jobs...');
+        initJobs();
 
         const port = config.PORT;
         server = app.listen(port, () => {

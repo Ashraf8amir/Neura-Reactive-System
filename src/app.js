@@ -9,11 +9,12 @@ const globalErrorHandler = require('./shared/middlewares/globalErrorHandler.midd
 const { HTTP_STATUS_TEXT } = require('./shared/constants/enums.js');
 const routes = require('./routes/index.js');
 const passport = require('./config/passport.js');
+const logger = require('./core/logger.js');
 
 const app = express();
 
 app.use(cors({
-    origin: ["http://127.0.0.1:5500", "http://localhost:5500"],
+    origin: true,
     credentials: true
 }));
 app.use(helmet());
@@ -26,7 +27,11 @@ app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
 app.get('/', (req, res) => {
-    res.status(200).json({ status: HTTP_STATUS_TEXT.OK, message: 'Hello Vercel!' });
+    res.status(200).json({ status: HTTP_STATUS_TEXT.OK, message: 'Hello Render!' });
+});
+app.get('/keep-alive', (req, res) => {
+    logger.info('I just got poked to stay awake!');
+    res.status(200).send('I am alive');
 });
 app.use('/api/v1', routes);
 app.all('/{*splat}', (req, res, next) => {
