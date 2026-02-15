@@ -13,9 +13,9 @@ const paymentService = require('../payments/payment.service');
 
 class AppointmentService {
 
-    static statuses = appointmentConstants.APPOINTMENT_STATUSES;
-    static appointmentTypes = appointmentConstants.APPOINTMENT_TYPES;
-    static paymentStatuses = appointmentConstants.PAYMENT_STATUSES;
+    statuses = appointmentConstants.APPOINTMENT_STATUSES;
+    appointmentTypes = appointmentConstants.APPOINTMENT_TYPES;
+    paymentStatuses = appointmentConstants.PAYMENT_STATUSES;
 
     async getAvailableSlots(doctorId, date, clinicId, isTelemedicine = false) {
         const startOfDay = new Date(date);
@@ -72,6 +72,7 @@ class AppointmentService {
 
         const session = await mongoose.startSession();
         session.startTransaction();
+        let committed = false;
 
         try {
             const [patient, doctor] = await Promise.all([
@@ -154,7 +155,8 @@ class AppointmentService {
 
             await newAppointment.save({ session });
             await session.commitTransaction();
-            session.endSession();
+            committed = true;
+            await session.endSession();
 
             let paymentData = null;
             if (['card', 'wallet'].includes(appointmentData.paymentMethod)) {
@@ -184,11 +186,15 @@ class AppointmentService {
                 paymentUrl: paymentData?.iframeUrl
             };
         } catch (error) {
-            await session.abortTransaction();
+            if (session.inTransaction()) {
+                await session.abortTransaction();
+            }
             logger.error('Error creating appointment', { error, doctorId, patientId });
             throw error;
         } finally {
-            session.endSession();
+            if (!committed) {
+                await session.endSession();
+            }
         }
     };
 

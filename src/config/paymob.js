@@ -23,8 +23,8 @@ class PaymobService {
         try {
             const response = await axios.post(`${PAYMOB_BASE_URL}/ecommerce/orders`, {
                 auth_token: authToken,
-                delivery_needed: deliveryNeeded,
-                amount_cents: amount * 100,
+                delivery_needed: String(deliveryNeeded),
+                amount_cents: Math.round(amount * 100),
                 currency: currency,
                 items: []
             });
@@ -40,7 +40,7 @@ class PaymobService {
         try {
             const response = await axios.post(`${PAYMOB_BASE_URL}/acceptance/payment_keys`, {
                 auth_token: authToken,
-                amount_cents: amount * 100,
+                amount_cents: Math.round(amount * 100),
                 expiration: 600,
                 order_id: orderId,
                 billing_data: billingData,
@@ -62,6 +62,7 @@ class PaymobService {
             const order = await this.registerOrder(
                 authToken,
                 paymentData.amount,
+                false,
                 paymentData.currency || 'EGP'
             );
 

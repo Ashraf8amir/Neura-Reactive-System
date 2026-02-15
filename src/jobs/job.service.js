@@ -14,7 +14,7 @@ class JobService {
             const result = await Appointment.updateMany(
                 {
                     status: appointmentConstants.APPOINTMENT_STATUSES.PENDING,
-                    paymentMethod: { $in: [appointmentConstants.PAYMENT_METHODS.CARD, appointmentConstants.PAYMENT_METHODS.WALLET] }, 
+                    'payment.method': { $ne: appointmentConstants.PAYMENT_METHODS.CASH }, 
                     createdAt: { $lt: tenMinutesAgo } 
                 },
                 {
