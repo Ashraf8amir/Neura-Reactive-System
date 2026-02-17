@@ -59,11 +59,11 @@ class AppointmentService {
             allSlots = [...allSlots, ...slots];
         });
 
-        return allSlots.sort((a, b) => a.startTime.localeCompare(b.startTime)); 
+        return allSlots.sort((a, b) => a.localeCompare(b)); 
     }
 
     async createAppointment(appointmentData, user) {
-        const { doctorId, clinicId, ...rest } = appointmentData;
+        const { doctorId, clinicId } = appointmentData;
 
         const patientId = user.role === ROLE.PATIENT ? user.id : appointmentData.patientId;
         if (!patientId) {
@@ -71,130 +71,104 @@ class AppointmentService {
         }
 
         const session = await mongoose.startSession();
-        session.startTransaction();
-        let committed = false;
 
         try {
-            const [patient, doctor] = await Promise.all([
-                Patient.findById(patientId).session(session),
-                Doctor.findById(doctorId).session(session)
-            ])
-        
-            if (!patient) {
-                throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Patient not found');
-            }
 
-            if (patient.blacklist.isBlocked) {
-                const date = patient.blacklist.blockedUntil.toLocaleDateString();
-                throw new AppError(403, HTTP_STATUS_TEXT.FORBIDDEN, `Patient is blocked from booking appointments until ${date}`);
-            }
-        
-            if ([ACCOUNT_STATUS.SUSPENDED, ACCOUNT_STATUS.INCOMPLETE].includes(patient.accountStatus)) {
-                throw new AppError(403, HTTP_STATUS_TEXT.FORBIDDEN, 'Patient is not allowed to book appointments');
-            }
-        
-            if (!doctor || doctor.accountStatus !== ACCOUNT_STATUS.ACTIVE) {
-                throw new AppError(403, HTTP_STATUS_TEXT.FORBIDDEN, 'Doctor is not available or inactive');
-            }
-        
-            if(appointmentData.appointmentType === this.appointmentTypes.TELEMEDICINE && !doctor.telemedicine?.enabled) {
-                throw new AppError(400, HTTP_STATUS_TEXT.BAD_REQUEST, 'Doctor does not offer telemedicine appointments');
-            }
-            
-             const isAvailable = await AppointmentHelpers.isTimeSlotAvailable(
-                doctorId,
-                appointmentData.scheduledDate,
-                appointmentData.scheduledTime.startTime,
-                appointmentData.scheduledTime.endTime,
-                session
-            );
-        
-            if (!isAvailable) {
-                throw new AppError(409, HTTP_STATUS_TEXT.CONFLICT, 'Time slot is not available');
-            }
-        
-            const clinicInfo = doctor.clinicInfo?.id(clinicId);
-            if (!clinicInfo) {
-                throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Clinic not found for the doctor');
-            }
+            let createdAppointment;
 
-            let consultationFee = 0;
-            switch (appointmentData.appointmentType) {
-                case this.appointmentTypes.FOLLOW_UP:
-                    consultationFee = clinicInfo.followUpFee || 0;
-                    break;
-                case this.appointmentTypes.TELEMEDICINE:
-                    consultationFee = doctor.telemedicine?.consultationFee || clinicInfo.consultationFee || 0;
-                    break;
-                case this.appointmentTypes.CONSULTATION:
-                default:
-                    consultationFee = clinicInfo.consultationFee || 0;
-                    break;
-            }
-        
-            const appointmentLocation  = {
-                clinicId: clinicInfo._id,
-                clinicName: clinicInfo.clinicName,
-                address: clinicInfo.address,
-                location: clinicInfo.location
-            };
-        
-            const newAppointment = new Appointment({
-                ...rest,
-                doctor: doctorId,
-                patient: patientId,
-                status: this.statuses.PENDING,
-                clinic: appointmentLocation,
-                payment: {
-                    consultationFee: consultationFee,
-                    totalAmount: consultationFee,
-                    method: appointmentData.paymentMethod
-                },
-                priority: appointmentData.appointmentType === this.appointmentTypes.EMERGENCY ? 'urgent' : 'normal'
+            await session.withTransaction(async () => {
+
+                const [patient, doctor] = await Promise.all([
+                    Patient.findById(patientId).session(session),
+                    Doctor.findById(doctorId).session(session)
+                ]);
+
+                if (!patient) {
+                    throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Patient not found');
+                }
+
+                if (patient.blacklist?.isBlocked) {
+                    const date = patient.blacklist.blockedUntil.toLocaleDateString();
+                    throw new AppError(403, HTTP_STATUS_TEXT.FORBIDDEN, `Patient is blocked from booking appointments until ${date}`);
+                }
+
+                if (!doctor || doctor.accountStatus !== ACCOUNT_STATUS.ACTIVE) {
+                    throw new AppError(403, HTTP_STATUS_TEXT.FORBIDDEN, 'Doctor is not available or inactive');
+                }
+
+                const clinicInfo = doctor.clinicInfo?.id(clinicId);
+                if (!clinicInfo) {
+                    throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Clinic not found for the doctor');
+                }
+
+                const isAvailable = await AppointmentHelpers.isTimeSlotAvailable(
+                    doctorId,
+                    clinicId,
+                    appointmentData.scheduledDate,
+                    appointmentData.scheduledTime.startTime,
+                    appointmentData.scheduledTime.endTime,
+                    session
+                );
+
+                if (!isAvailable) {
+                    throw new AppError(409, HTTP_STATUS_TEXT.CONFLICT, 'Time slot is not available');
+                }
+
+                const consultationFee = AppointmentHelpers.calculateConsultationFee(appointmentData.appointmentType, clinicInfo, doctor);
+                
+                createdAppointment = await Appointment.create(
+                    [{
+                        doctor: doctorId,
+                        patient: patientId,
+                        scheduledDate: appointmentData.scheduledDate,
+                        scheduledTime: appointmentData.scheduledTime,
+                        appointmentType: appointmentData.appointmentType,
+                        status: this.statuses.PENDING,
+                        clinic: {
+                            clinicId: clinicInfo._id,
+                            clinicName: clinicInfo.clinicName,
+                            address: clinicInfo.address,
+                            location: clinicInfo.location
+                        },
+                        payment: {
+                            consultationFee,
+                            totalAmount: consultationFee,
+                            method: appointmentData.paymentMethod,
+                        },
+                        priority: appointmentData.appointmentType === this.appointmentTypes.EMERGENCY ? 'urgent' : 'normal'
+                    }],
+                    { session }
+                );
             });
-
-            await newAppointment.save({ session });
-            await session.commitTransaction();
-            committed = true;
-            await session.endSession();
 
             let paymentData = null;
             if (['card', 'wallet'].includes(appointmentData.paymentMethod)) {
                 paymentData = await paymentService.initiateAppointmentPaymentService(
                     patientId,
-                    newAppointment._id,
+                    createdAppointment[0]._id,
                     appointmentData.paymentMethod,
-                    consultationFee
+                    createdAppointment[0].payment.totalAmount,
                 );
             }
         
-            await newAppointment.populate([
+            await createdAppointment[0].populate([
             { path: 'doctor', select: 'firstName lastName professionalInfo.primarySpecialization' },
             { path: 'patient', select: 'firstName lastName phone email dateOfBirth address' }
             ]);
         
-            logger.info('Appointment created', {
-                appointmentId: newAppointment._id,
-                doctorId,
-                patientId,
-                duration: Date.now() - newAppointment.createdAt.getTime()
-            });
         
             return {
-                appointment: newAppointment,
+                appointment: createdAppointment[0],
                 paymentInitiated: !!paymentData,
                 paymentUrl: paymentData?.iframeUrl
             };
+
         } catch (error) {
-            if (session.inTransaction()) {
-                await session.abortTransaction();
-            }
             logger.error('Error creating appointment', { error, doctorId, patientId });
             throw error;
+
         } finally {
-            if (!committed) {
-                await session.endSession();
-            }
+            await session.endSession();
         }
     };
 

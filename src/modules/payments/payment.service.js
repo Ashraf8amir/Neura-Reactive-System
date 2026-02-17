@@ -7,6 +7,7 @@ const User = require('../../shared/models/user.model');
 const Appointment = require('../appointments/appointment.model');
 const { ROLE } = require('../../shared/constants/enums.js');
 const logger = require('../../core/logger.js');
+const mongoose = require('mongoose');
 
 
 class PaymentService {
@@ -107,7 +108,7 @@ class PaymentService {
         };
     }
 
-    async _handleRefundLogic(payment, processedData, callbackData) {
+    async _handleRefundLogic(payment, processedData, callbackData, session) {
         if (payment.status === paymentConstants.STATUS.REFUNDED) {
             logger.info(`Payment for order ${processedData.orderId} is already REFUNDED. Skipping.`);
             return payment;
@@ -130,7 +131,7 @@ class PaymentService {
                         serviceDoc.cancellation.refundStatus = appointmentConstants.REFUND_STATUSES.APPROVED;
                     }
 
-                    await serviceDoc.save();
+                    await serviceDoc.save({ session });
                 }
             }
         } else {
@@ -139,15 +140,15 @@ class PaymentService {
 
             if (payment.appointment && payment.appointment.cancellation) {
                 payment.appointment.cancellation.refundStatus = appointmentConstants.REFUND_STATUSES.REJECTED;
-                await payment.appointment.save();
+                await payment.appointment.save({ session });
             }
         }
 
-        await payment.save();
+        await payment.save({ session });
         return payment;
     }
 
-    async _handlePaymentLogic(payment, processedData, callbackData) {
+    async _handlePaymentLogic(payment, processedData, callbackData, session) {
         if (payment.status === paymentConstants.STATUS.COMPLETED) {
             logger.log(`Payment for order ${processedData.orderId} is already COMPLETED. Skipping duplicate callback.`);
             return payment;
@@ -167,7 +168,7 @@ class PaymentService {
                     payment[service].payment.paidAt = new Date();
                     payment[service].status = appointmentConstants.APPOINTMENT_STATUSES.CONFIRMED;
 
-                    await payment[service].save();
+                    await payment[service].save({ session });
                 }
             }
         } else if (processedData.pending) {
@@ -178,28 +179,49 @@ class PaymentService {
             payment.error.message = callbackData.data?.message || 'Payment failed';
         }
 
-        await payment.save();
+        await payment.save({ session });
         return payment;
     }
 
     async handlePaymobCallbackService(callbackData) {
         const processedData = paymob.processCallback(callbackData);
 
-        const payment = await Payment.findOne({
-            'paymob.orderId': processedData.orderId
-        }).populate('appointment nursingService medicineOrder');
+        const session = await mongoose.startSession();
 
-        if (!payment) {
-            throw new AppError(404, httpStatus.FAIL, 'Payment not found');
+        try {
+
+            let result;
+
+            await session.withTransaction(async () => {
+
+                const payment = await Payment.findOne({
+                    'paymob.orderId': processedData.orderId
+                })
+                .populate('appointment nursingService medicineOrder')
+                .session(session);
+
+                if (!payment) {
+                    throw new AppError(404, httpStatus.FAIL, 'Payment not found');
+                }
+
+                const isRefundAction = callbackData.obj?.is_refund === true || callbackData.obj?.type === 'REFUND';
+
+                if (isRefundAction) {
+                    return await this._handleRefundLogic(payment, processedData, callbackData, session);
+                } else {
+                    return await this._handlePaymentLogic(payment, processedData, callbackData, session);
+                }
+            });
+
+            return result;
+
+        } catch (error) {
+            logger.error('Error processing Paymob callback', { error, callbackData });
+            throw error;
+
+        } finally {
+            await session.endSession();
         }
-
-        const isRefundAction = callbackData.obj?.is_refund === true || callbackData.obj?.type === 'REFUND';
-
-        if (isRefundAction) {
-            return await this._handleRefundLogic(payment, processedData, callbackData);
-        }
-
-        return await this._handlePaymentLogic(payment, processedData, callbackData);
     }
 
     async initiateAppointmentPaymentService(patientId, appointmentId, paymentMethod, amount) {

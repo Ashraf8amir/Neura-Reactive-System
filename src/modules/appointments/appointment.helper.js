@@ -5,12 +5,13 @@ const { appointmentConstants } = require('./appointment.constant');
 
 class AppointmentHelpers {
 
-
-    static async isTimeSlotAvailable(doctorId, date, startTime, endTime, session = null, excludeAppointmentId = null) {
+    
+    static async isTimeSlotAvailable(doctorId, clinicId, date, startTime, endTime, session = null, excludeAppointmentId = null) {
         const query = {
             doctor: doctorId,
+            "clinic.clinicId": clinicId,
             scheduledDate: date,
-            status: { $nin: [appointmentConstants.APPOINTMENT_STATUSES.CANCELLED] },
+            status: { $in: [appointmentConstants.APPOINTMENT_STATUSES.PENDING, appointmentConstants.APPOINTMENT_STATUSES.CONFIRMED] },
             'scheduledTime.startTime': { $lt: endTime },
             'scheduledTime.endTime': { $gt: startTime }
         };
@@ -22,39 +23,21 @@ class AppointmentHelpers {
         const conflictingAppointment = await Appointment.findOne(query).session(session);
         return !conflictingAppointment;
     }
-    static async sendAppointmentConfirmation(appointment) {
-        try {
-            // Send SMS
-            if (appointment.patient.phone) {
-                await sendSMS(
-                    appointment.patient.phone,
-                    `تم حجز موعدك مع د. ${appointment.doctor.firstName} ${appointment.doctor.lastName} يوم ${appointment.scheduledDate.toLocaleDateString('ar-EG')} الساعة ${appointment.scheduledTime.startTime}`
-                );
+    static calculateConsultationFee(appointmentType, clinicInfo, doctor) {
+        let consultationFee = 0;
+            switch (appointmentType) {
+                case appointmentConstants.APPOINTMENT_TYPES.FOLLOW_UP:
+                    consultationFee = clinicInfo.followUpFee || 0;
+                    break;
+                case appointmentConstants.APPOINTMENT_TYPES.TELEMEDICINE:
+                    consultationFee = doctor.telemedicine?.consultationFee || clinicInfo.consultationFee || 0;
+                    break;
+                case appointmentConstants.APPOINTMENT_TYPES.CONSULTATION:
+                default:
+                    consultationFee = clinicInfo.consultationFee || 0;
+                    break;
             }
-          
-            // Send Email
-            if (appointment.patient.email) {
-                await sendEmail(
-                    appointment.patient.email,
-                    'Appointment Confirmation',
-                    appointmentConfirmationTemplate(appointment)
-                );
-            }
-          
-            // Log reminder in appointment
-            await Appointment.findByIdAndUpdate(appointment._id, {
-                $push: {
-                    reminders: {
-                        type: 'sms',
-                        sentAt: new Date(),
-                        status: 'sent'
-                    }
-                }
-            });
-        } catch (error) {
-            console.error('Notification error:', error);
-            // Don't throw - notification failure shouldn't fail appointment creation
-        }
+        return consultationFee;
     }
     static buildQueryByRole(user, filters) {
         const query = {};
