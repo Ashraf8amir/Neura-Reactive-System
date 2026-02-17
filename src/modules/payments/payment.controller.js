@@ -27,15 +27,16 @@ exports.handlePaymobCallback = asyncWrapper(async (req, res) => {
 });
 /**
  * @desc    Payment success redirect page
- * @route   GET /api/v1/payments/success
+ * @route   GET /api/v1/payments/successs
  * @access  Public
  */
 exports.paymentSuccess = asyncWrapper(async (req, res) => {
-    const { success, order, id } = req.query;
+    const { success } = req.query;
 
     if (success === 'true') {
-        return res.redirect(`${process.env.FRONTEND_URL}/payment/success?orderId=${order}&transactionId=${id}`);
+        return res.redirect(`${process.env.FRONTEND_URL}`);
     } else {
-        return res.redirect(`${process.env.FRONTEND_URL}/payment/failed?orderId=${order}`);
+        return res.send('Payment failed. Please try again.');
+        // return res.redirect(`${process.env.FRONTEND_URL}`);
     }
 });
