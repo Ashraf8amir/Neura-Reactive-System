@@ -89,32 +89,30 @@ class PaymobService {
         }
     }
 
-    verifyCallback(callbackData) {
+    verifyCallback(callbackData, hmacFromUrl) {
         try {
-            const { hmac, order, ...rest } = callbackData;
-
             const hmacFields = [
-            callbackData.amount_cents,
-            callbackData.created_at,
-            callbackData.currency,
-            callbackData.error_occured,
-            callbackData.has_parent_transaction,
-            callbackData.id,
-            callbackData.integration_id,
-            callbackData.is_3d_secure,
-            callbackData.is_auth,
-            callbackData.is_capture,
-            callbackData.is_refunded,
-            callbackData.is_standalone_payment,
-            callbackData.is_voided,
-            callbackData.order?.id || callbackData.order_id, 
-            callbackData.owner,
-            callbackData.pending,
-            callbackData.source_data?.pan || callbackData['source_data.pan'],
-            callbackData.source_data?.sub_type || callbackData['source_data.sub_type'],
-            callbackData.source_data?.type || callbackData['source_data.type'],
-            callbackData.success
-        ];
+                callbackData.amount_cents,
+                callbackData.created_at,
+                callbackData.currency,
+                callbackData.error_occured,
+                callbackData.has_parent_transaction,
+                callbackData.id,
+                callbackData.integration_id,
+                callbackData.is_3d_secure,
+                callbackData.is_auth,
+                callbackData.is_capture,
+                callbackData.is_refunded,
+                callbackData.is_standalone_payment,
+                callbackData.is_voided,
+                callbackData.order?.id || callbackData.order,
+                callbackData.owner,
+                callbackData.pending,
+                callbackData.source_data?.pan,
+                callbackData.source_data?.sub_type,
+                callbackData.source_data?.type,
+                callbackData.success
+            ];
 
         const concatenatedString = hmacFields
             .map(field => (field === null || field === undefined ? "" : String(field)))
@@ -125,15 +123,21 @@ class PaymobService {
                 .update(concatenatedString)
                 .digest('hex');
 
-            return calculatedHmac === hmac;
+            logger.info(`Calculated HMAC: ${calculatedHmac}`);
+            logger.info(` HMAC from URL: ${hmacFromUrl}`);
+            logger.info(`Concatenated String for HMAC: ${concatenatedString}`);
+
+            return calculatedHmac === hmacFromUrl;
         } catch (error) {
             logger.error('HMAC Verification Error:', error);
             return false;
         }
     }
 
-    processCallback(callbackData) {
-        const isValid = this.verifyCallback(callbackData);
+    processCallback(callbackData, hmacFromUrl) {
+        logger.info('Processing Paymob Callback with data:', callbackData);
+        logger.info('HMAC from URL:', hmacFromUrl);
+        const isValid = this.verifyCallback(callbackData, hmacFromUrl);
         
         if (!isValid) {
             throw new Error('Invalid HMAC - Callback verification failed');
@@ -142,12 +146,10 @@ class PaymobService {
         return {
             transactionId: callbackData.id,
             orderId: callbackData.order?.id,
-            success: callbackData.success === 'true' || callbackData.success === true,
-            pending: callbackData.pending === 'true' || callbackData.pending === true,
+            success: String(callbackData.success) === 'true',
             amount: callbackData.amount_cents / 100,
             currency: callbackData.currency,
-            errorOccurred: callbackData.error_occured === 'true' || callbackData.error_occured === true,
-            paymentMethod: callbackData.source_data_type,
+            paymentMethod: callbackData.source_data?.type,
             card: {
                 pan: callbackData.source_data_pan,
                 type: callbackData.source_data_sub_type

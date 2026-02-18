@@ -11,12 +11,13 @@ const service = require('./payment.service');
  */
 exports.handlePaymobCallback = asyncWrapper(async (req, res) => {
     const callbackData = req.body.obj; 
+    const hmacFromUrl = req.query.hmac; 
     
     if (!callbackData) {
         return new ApiResponse(res, 400, HTTP_STATUS_TEXT.FAIL, 'Invalid payload');
     }
 
-    await service.handlePaymobCallbackService(callbackData);
+    await service.handlePaymobCallbackService(callbackData, hmacFromUrl);
 
     return new ApiResponse(
         res,

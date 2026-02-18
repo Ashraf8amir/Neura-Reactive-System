@@ -183,8 +183,8 @@ class PaymentService {
         return payment;
     }
 
-    async handlePaymobCallbackService(callbackData) {
-        const processedData = paymob.processCallback(callbackData);
+    async handlePaymobCallbackService(callbackData, hmacFromUrl) {
+        const processedData = paymob.processCallback(callbackData, hmacFromUrl);
 
         const session = await mongoose.startSession();
 
