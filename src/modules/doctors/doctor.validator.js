@@ -1,8 +1,8 @@
 const joi = require("joi");
 const enums = require("../../shared/constants/enums");
 
-exports.updateBasicInfoSchema = (data) => {
-    const updateBasicInfoSchema = joi.object({
+exports.updateBasicInfoSchema = joi.object({
+    body: joi.object({
         firstName: joi.string().trim().min(2).max(30)
             .pattern(/^[\u0600-\u06FFa-zA-Z\s]+$/)
             .optional()
@@ -32,13 +32,11 @@ exports.updateBasicInfoSchema = (data) => {
             street: joi.string().trim().allow('', null).optional()
                 .messages({ 'string.empty': 'Street cannot be empty' }),
         }).optional()
-
     }).min(1).messages({'object.min': 'At least one field must be provided for update'})
+});
 
-    return updateBasicInfoSchema.validate(data, { abortEarly: false });
-}
-exports.updateProfessionalInfoSchema = (data) => {
-    const updateProfessionalInfoSchema = joi.object({
+exports.updateProfessionalInfoSchema = joi.object({
+    body: joi.object({
         primarySpecialization: joi.string().trim().min(2).max(100).optional(),
         subSpecializations: joi.array().items(
             joi.string().trim().min(2).max(100)
@@ -52,39 +50,34 @@ exports.updateProfessionalInfoSchema = (data) => {
         ).optional(),
         bio: joi.string().trim().max(1000).optional()
     }).min(1).messages({'object.min': 'At least one field must be provided for update'})
+});
 
-    return updateProfessionalInfoSchema.validate(data, { abortEarly: false });
-}
-exports.addCertificateSchema = (data) => {
-    const addCertificateSchema = joi.object({
+exports.addCertificateSchema = joi.object({
+    body: joi.object({
         name: joi.string().trim().min(2).max(200).required(),
         institution: joi.string().trim().min(2).max(200).required(),
         Year: joi.number().integer().min(1900).max(new Date().getFullYear()).required()
-    });
+    })
+});
 
-    return addCertificateSchema.validate(data, { abortEarly: false });
-}
-exports.addMembershipSchema = (data) => {
-    const addMembershipSchema = joi.object({
+exports.addMembershipSchema = joi.object({
+    body: joi.object({
         nameOfAssociation: joi.string().trim().min(2).max(200).required(),
         memberId: joi.string().trim().min(1).max(100).allow('', null).optional(),
         Since: joi.number().integer().min(1900).max(new Date().getFullYear()).allow(null).optional()
-    }); 
+    })
+});
 
-    return addMembershipSchema.validate(data, { abortEarly: false });
-}
-exports.addAwardSchema = (data) => {
-    const addAwardSchema = joi.object({
+exports.addAwardSchema = joi.object({
+    body: joi.object({
         name: joi.string().trim().min(2).max(200).required(),
         awardedBy: joi.string().trim().min(2).max(200).required(),
         year: joi.number().integer().min(1900).max(new Date().getFullYear()).required()
-    });
+    })
+});
 
-    return addAwardSchema.validate(data, { abortEarly: false });
-}
-
-exports.setClinicInfoSchema = (data) => {
-    const setClinicInfoSchema = joi.object({
+exports.setClinicInfoSchema = joi.object({
+    body: joi.object({
         clinicName: joi.string().trim().min(2).max(200).required(),
         phone: joi.string().pattern(/^01[0-2,5]{1}[0-9]{8}$/).required()
             .messages({ 'string.pattern.base': 'Phone number must be a valid Egyptian phone number' }),
@@ -115,12 +108,11 @@ exports.setClinicInfoSchema = (data) => {
         ).required(),
         consultationFee: joi.number().min(0).max(10000).required(),
         followUpFee: joi.number().min(0).max(10000).required()
-    });
+    })
+});
 
-    return setClinicInfoSchema.validate(data, { abortEarly: false });
-}
-exports.updateClinicInfoSchema = (data) => {
-    const updateClinicInfoSchema = joi.object({
+exports.updateClinicInfoSchema = joi.object({
+    body: joi.object({
         clinicName: joi.string().trim().min(2).max(200).optional(),
         phone: joi.string().pattern(/^01[0-2,5]{1}[0-9]{8}$/).optional()
             .messages({ 'string.pattern.base': 'Phone number must be a valid Egyptian phone number' }),
@@ -152,12 +144,10 @@ exports.updateClinicInfoSchema = (data) => {
         consultationFee: joi.number().min(0).max(10000).optional(),
         followUpFee: joi.number().min(0).max(10000).optional()
     }).min(1).messages({'object.min': 'At least one field must be provided for update'})
+});
 
-    return updateClinicInfoSchema.validate(data, { abortEarly: false });
-}
-
-exports.addTelemedicineSchema = (data) => {
-    const addTelemedicineSchema = joi.object({
+exports.addTelemedicineSchema = joi.object({
+    body: joi.object({
         consultationFee: joi.number().min(0).max(10000).required(),
         availableHours: joi.array().items(
             joi.object({
@@ -168,12 +158,11 @@ exports.addTelemedicineSchema = (data) => {
                     .messages({ 'string.pattern.base': 'End time must be in HH:mm format' }),
             }).required()
         ).required()
-    });
+    })
+});
 
-    return addTelemedicineSchema.validate(data, { abortEarly: false });
-}
-exports.updateTelemedicineSchema = (data) => {
-    const updateTelemedicineSchema = joi.object({
+exports.updateTelemedicineSchema = joi.object({
+    body: joi.object({
         consultationFee: joi.number().min(0).max(10000).optional(),
         availableHours: joi.array().items(
             joi.object({
@@ -184,14 +173,11 @@ exports.updateTelemedicineSchema = (data) => {
                     .messages({ 'string.pattern.base': 'End time must be in HH:mm format' }),
             }).required()
         ).optional()
-
     }).min(1).messages({'object.min': 'At least one field must be provided for update'})
+});
 
-    return updateTelemedicineSchema.validate(data, { abortEarly: false });
-}
-
-exports.uploadMedicalLicenseSchema = (data) => {
-    const uploadMedicalLicenseSchema = joi.object({
+exports.uploadMedicalLicenseSchema = joi.object({
+    body: joi.object({
         licenseNumber: joi.string().trim().min(1).max(100).required(),
         issueDate: joi.date().max('now').required().messages({
             'date.max': 'Issue date cannot be in the future'
@@ -199,45 +185,37 @@ exports.uploadMedicalLicenseSchema = (data) => {
         expiryDate: joi.date().greater(joi.ref('issueDate')).required().messages({
             'date.greater': 'Expiry date must be after issue date'
         })
-    }); 
+    })
+});
 
-    return uploadMedicalLicenseSchema.validate(data, { abortEarly: false });
-}
-exports.uploadMedicalDegreeSchema = (data) => {
-    const uploadMedicalDegreeSchema = joi.object({
+exports.uploadMedicalDegreeSchema = joi.object({
+    body: joi.object({
         university: joi.string().trim().min(2).max(100).required(),
         graduationYear: joi.number().integer().min(1900).max(new Date().getFullYear()).required(),
         degree: joi.string().trim().min(2).max(100).required()
-    });
+    })
+});
 
-    return uploadMedicalDegreeSchema.validate(data, { abortEarly: false });
-}
-exports.uploadSyndicateCardSchema = (data) => {
-    const uploadSyndicateCardSchema = joi.object({
+exports.uploadSyndicateCardSchema = joi.object({
+    body: joi.object({
         syndicateNumber: joi.string().trim().min(1).max(100).required(),
         issueDate: joi.date().max('now').required().messages({
             'date.max': 'Issue date cannot be in the future'
         })
-    });
+    })
+});
 
-    return uploadSyndicateCardSchema.validate(data, { abortEarly: false });
-}
-
-exports.browseDoctorsSchema = (data) => {
-    const browseDoctorsSchema = joi.object({
+exports.browseDoctorsSchema = joi.object({
+    query: joi.object({
         page: joi.number().integer().min(1).default(1),
         limit: joi.number().integer().min(1).max(100).default(10),
-
         sortBy: joi.string().valid('rating', 'price').default('rating'),
         sortOrder: joi.string().valid('asc', 'desc').default('desc'),
-
         specialization: joi.string().trim(),
         city: joi.string().trim(),
         governorate: joi.string().trim(),
         gender: joi.string().valid('male', 'female'),
         minRating: joi.number().min(0).max(5),
         availableToday: joi.boolean()
-    });
-
-    return browseDoctorsSchema.validate(data, { abortEarly: false });
-}
+    })
+});

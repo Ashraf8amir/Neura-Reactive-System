@@ -1,8 +1,8 @@
 const joi = require('joi');
 const { appointmentConstants } = require('./appointment.constant');
 
-exports.createAppointmentSchema = (data) => {
-    const createAppointmentSchema = joi.object({
+exports.createAppointmentSchema = joi.object({
+    body: joi.object({
         patientId: joi.string().length(24).hex().optional().messages({
                 'string.length': 'patientId must be a valid 24-character id',
                 'string.hex': 'patientId must be a valid ObjectId'
@@ -46,12 +46,11 @@ exports.createAppointmentSchema = (data) => {
                 'any.only': 'Payment method must be card, wallet, or cash',
                 'any.required': 'Payment method is required'
         })
-    });
+    })
+});
 
-    return createAppointmentSchema.validate(data, { abortEarly: false });  
-};
-exports.rescheduleAppointmentSchema = (data) => {
-    const rescheduleAppointmentSchema = joi.object({
+exports.rescheduleAppointmentSchema = joi.object({
+    body: joi.object({
         newDate: joi.date().required().min('now').messages({
             'date.base': 'New date must be a valid date',
             'date.min': 'New date must be in the future',
@@ -78,13 +77,11 @@ exports.rescheduleAppointmentSchema = (data) => {
             'string.max': 'Reason cannot exceed 500 characters',
             'any.required': 'Reason for rescheduling is required'
         })
-    });
+    })
+});
 
-    return rescheduleAppointmentSchema.validate(data, { abortEarly: false });
-};
-
-exports.updatePatientVisitInfoSchema = (data) => {
-    const updatePatientVisitInfoSchema = joi.object({
+exports.updatePatientVisitInfoSchema = joi.object({
+    body: joi.object({
       patientProvidedInfo: joi.object({
         visitType: joi.string()
           .valid(...Object.values(appointmentConstants.VISIT_TYPES))
@@ -107,7 +104,5 @@ exports.updatePatientVisitInfoSchema = (data) => {
             'string.max': 'patientNotes cannot exceed 1000 characters'
           })
       }).optional()
-    });
-
-    return updatePatientVisitInfoSchema.validate(data, { abortEarly: false });
-};
+    })
+});

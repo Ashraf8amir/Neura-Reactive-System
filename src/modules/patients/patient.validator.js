@@ -2,8 +2,8 @@ const joi = require('joi');
 const { patientConstants } = require('./patient.constant');
 const enums = require('../../shared/constants/enums');
 
-exports.updateBasicInfoSchema = (data) => {
-    const updateBasicInfoSchema = joi.object({
+exports.updateBasicInfoSchema = joi.object({
+    body: joi.object({
         firstName: joi.string().trim().min(2).max(30)
             .pattern(/^[\u0600-\u06FFa-zA-Z\s]+$/)
             .optional()
@@ -44,12 +44,10 @@ exports.updateBasicInfoSchema = (data) => {
                     .messages({ 'string.empty': 'Street cannot be empty' }),
             }).optional()
     }).min(1).messages({'object.min': 'At least one field must be provided for update'})
+});
 
-    return updateBasicInfoSchema.validate(data, { abortEarly: false });
-};
-
-exports.updateMedicalProfileSchema = (data) => {
-    const updateMedicalProfileSchema = joi.object({
+exports.updateMedicalProfileSchema = joi.object({
+    body: joi.object({
         lifestyle: joi.object({
             smokingStatus: joi.string().valid(...patientConstants.SMOKING_STATUS).allow('', null).optional().messages({
                 'any.only': 'Smoking status must be one of: non-smoker, ex-smoker, current-smoker'
@@ -70,11 +68,10 @@ exports.updateMedicalProfileSchema = (data) => {
             }),
         }).optional(),
     })
+});
 
-    return updateMedicalProfileSchema.validate(data, { abortEarly: false });
-};
-exports.addChronicDiseaseSchema = (data) => {
-    const addChronicDiseaseSchema = joi.object({
+exports.addChronicDiseaseSchema = joi.object({
+    body: joi.object({
         nameOfDisease: joi.string().trim().min(2).max(100).required().messages({
             'string.empty': 'Name of disease is required'
         }),
@@ -84,11 +81,11 @@ exports.addChronicDiseaseSchema = (data) => {
         since: joi.date().max('now').required().messages({
             'date.max': 'Since date cannot be in the future'
         })
-    });
-    return addChronicDiseaseSchema.validate(data, { abortEarly: false });
-};
-exports.updateChronicDiseaseSchema = (data) => {
-    const updateChronicDiseaseSchema = joi.object({
+    })
+});
+
+exports.updateChronicDiseaseSchema = joi.object({
+    body: joi.object({
         nameOfDisease: joi.string().trim().min(2).max(100).optional().messages({
             'string.empty': 'Name of disease cannot be empty'
         }),
@@ -98,12 +95,11 @@ exports.updateChronicDiseaseSchema = (data) => {
         since: joi.date().max('now').optional().messages({
             'date.max': 'Since date cannot be in the future'
         })
-    }).min(1).messages({'object.min': 'At least one field must be provided for update'});
-    return updateChronicDiseaseSchema.validate(data, { abortEarly: false });
-};
+    }).min(1).messages({'object.min': 'At least one field must be provided for update'})
+});
 
-exports.addAllergySchema = (data) => {
-    const addAllergySchema = joi.object({
+exports.addAllergySchema = joi.object({
+    body: joi.object({
         nameOfAllergy: joi.string().trim().min(2).max(100).required().messages({
             'string.empty': 'Name of allergy is required',
             'any.required': 'Name of allergy is required'
@@ -123,11 +119,11 @@ exports.addAllergySchema = (data) => {
             'array.min': 'At least one allergy type must be provided',
             'any.required': 'Allergy types are required'
         })
-    });
-    return addAllergySchema.validate(data, { abortEarly: false });
-};
-exports.updateAllergySchema = (data) => {
-    const updateAllergySchema = joi.object({
+    })
+});
+
+exports.updateAllergySchema = joi.object({
+    body: joi.object({
         nameOfAllergy: joi.string().trim().min(2).max(100).optional().messages({
             'string.empty': 'Name of allergy cannot be empty'
         }),
@@ -143,12 +139,11 @@ exports.updateAllergySchema = (data) => {
                 })
             })
         ).optional()
-    }).min(1).messages({'object.min': 'At least one field must be provided for update'});
-    return updateAllergySchema.validate(data, { abortEarly: false });
-};
+    }).min(1).messages({'object.min': 'At least one field must be provided for update'})
+});
 
-exports.addSurgerySchema = (data) => {
-    const addSurgerySchema = joi.object({
+exports.addSurgerySchema = joi.object({
+    body: joi.object({
         nameOfSurgery: joi.string().trim().min(2).max(100).required().messages({
             'string.empty': 'Name of surgery is required'
         }),
@@ -158,12 +153,11 @@ exports.addSurgerySchema = (data) => {
         hospital: joi.string().trim().min(2).max(100).optional(),
         doctor: joi.string().trim().min(2).max(100).optional(),
         notes: joi.string().trim().max(500).optional()
-    });
+    })
+});
 
-    return addSurgerySchema.validate(data, { abortEarly: false });
-};
-exports.updateSurgerySchema = (data) => {
-    const updateSurgerySchema = joi.object({
+exports.updateSurgerySchema = joi.object({
+    body: joi.object({
         nameOfSurgery: joi.string().trim().min(2).max(100).optional().messages({
             'string.empty': 'Name of surgery cannot be empty'
         }),
@@ -173,13 +167,11 @@ exports.updateSurgerySchema = (data) => {
         hospital: joi.string().trim().min(2).max(100).optional(),
         doctor: joi.string().trim().min(2).max(100).optional(),
         notes: joi.string().trim().max(500).optional()
-    }).min(1).messages({'object.min': 'At least one field must be provided for update'});
+    }).min(1).messages({'object.min': 'At least one field must be provided for update'})
+});
 
-    return updateSurgerySchema.validate(data, { abortEarly: false });
-};
-
-exports.addFamilyMedicalHistorySchema = (data) => {
-    const addFamilyMedicalHistorySchema = joi.object({
+exports.addFamilyMedicalHistorySchema = joi.object({
+    body: joi.object({
         nameOfFamilyMember: joi.string().trim().min(2).max(100).required().messages({
             'string.empty': 'Name of family member is required'
         }),
@@ -189,11 +181,11 @@ exports.addFamilyMedicalHistorySchema = (data) => {
         age: joi.number().integer().min(0).optional().messages({
             'number.min': 'Age cannot be negative'
         })
-    });
-    return addFamilyMedicalHistorySchema.validate(data, { abortEarly: false });
-};
-exports.updateFamilyMedicalHistorySchema = (data) => {
-    const updateFamilyMedicalHistorySchema = joi.object({
+    })
+});
+
+exports.updateFamilyMedicalHistorySchema = joi.object({
+    body: joi.object({
         nameOfFamilyMember: joi.string().trim().min(2).max(100).optional().messages({
             'string.empty': 'Name of family member cannot be empty'
         }),
@@ -203,12 +195,11 @@ exports.updateFamilyMedicalHistorySchema = (data) => {
         age: joi.number().integer().min(0).optional().messages({
             'number.min': 'Age cannot be negative'
         })
-    }).min(1).messages({'object.min': 'At least one field must be provided for update'});
-    return updateFamilyMedicalHistorySchema.validate(data, { abortEarly: false });
-};
+    }).min(1).messages({'object.min': 'At least one field must be provided for update'})
+});
 
-exports.addMedicationSchema = (data) => {
-    const addMedicationSchema = joi.object({
+exports.addMedicationSchema = joi.object({
+    body: joi.object({
         name: joi.string().trim().min(2).max(100).required().messages({
             'string.empty': 'Name of medication is required',
             'any.required': 'Name of medication is required'
@@ -221,11 +212,11 @@ exports.addMedicationSchema = (data) => {
             'string.empty': 'Dosage is required',
             'any.required': 'Dosage is required'
         })
-    });
-    return addMedicationSchema.validate(data, { abortEarly: false });
-};
-exports.updateMedicationSchema = (data) => {
-    const updateMedicationSchema = joi.object({
+    })
+});
+
+exports.updateMedicationSchema = joi.object({
+    body: joi.object({
         name: joi.string().trim().min(2).max(100).optional().messages({
             'string.empty': 'Name of medication cannot be empty'
         }),
@@ -235,13 +226,11 @@ exports.updateMedicationSchema = (data) => {
         dosage: joi.string().trim().min(1).max(50).optional().messages({
             'string.empty': 'Dosage cannot be empty'
         })
-    }).min(1).messages({'object.min': 'At least one field must be provided for update'});
-    return updateMedicationSchema.validate(data, { abortEarly: false });
-};
+    }).min(1).messages({'object.min': 'At least one field must be provided for update'})
+});
 
-
-exports.addEmergencyContactSchema = (data) => {
-    const addEmergencyContactSchema = joi.object({
+exports.addEmergencyContactSchema = joi.object({
+    body: joi.object({
         name: joi.string().trim().min(2).max(50).required(),
         relationship: joi.string().trim().min(2).max(30).required(),
         phoneNumber: joi.string().pattern(/^01[0-2,5]{1}[0-9]{8}$/).required().messages({
@@ -253,11 +242,11 @@ exports.addEmergencyContactSchema = (data) => {
         email: joi.string().trim().email().optional().allow(null, '').messages({
             'string.email': 'Email must be a valid email address'
         })
-    });
-    return addEmergencyContactSchema.validate(data, { abortEarly: false });
-};
-exports.updateEmergencyContactSchema = (data) => {  
-    const updateEmergencyContactSchema = joi.object({
+    })
+});
+
+exports.updateEmergencyContactSchema = joi.object({
+    body: joi.object({
         name: joi.string().trim().min(2).max(50).optional(),
         relationship: joi.string().trim().min(2).max(30).optional(),
         phoneNumber: joi.string().pattern(/^01[0-2,5]{1}[0-9]{8}$/).optional().messages({
@@ -269,6 +258,5 @@ exports.updateEmergencyContactSchema = (data) => {
         email: joi.string().trim().email().optional().allow(null, '').messages({
             'string.email': 'Email must be a valid email address'
         })
-    }).min(1).messages({'object.min': 'At least one field must be provided for update'});
-    return updateEmergencyContactSchema.validate(data, { abortEarly: false });
-};
+    }).min(1).messages({'object.min': 'At least one field must be provided for update'})
+});

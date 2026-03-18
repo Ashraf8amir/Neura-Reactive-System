@@ -11,11 +11,9 @@ class DoctorService {
 
     selectBasicFields = 'firstName lastName fullName email phone dateOfBirth gender age role address nationality profileImage';
 
-    async getDoctorById(doctorId, selectFields ='') {
-        const query = Doctor.findById(doctorId);
-        if (selectFields) query.select(selectFields);
+    async getDoctorById(doctorId) {
+        const doctor = await Doctor.findById(doctorId);
 
-        const doctor =  await query;
         if (!doctor) {
             throw new AppError(404, HTTP_STATUS_TEXT.FAIL, 'Doctor not found');
         }
@@ -393,49 +391,7 @@ class DoctorService {
             sortOrder = 'desc'
         } = options;
 
-        const query = {
-            accountStatus: 'active',
-        };
-
-        if (filters.specialization) {
-            query['professionalInfo.primarySpecialization'] = filters.specialization;
-        }
-
-        if (filters.gender) {
-            query.gender = filters.gender;
-        }
-
-        if (filters.minRating !== undefined) {
-            query.rating = { $gte: parseFloat(filters.minRating) };
-        }
-
-        if (filters.city || filters.governorate) {
-            const clinicConditions = {};
-            if (filters.city) {
-                clinicConditions['clinicInfo.address.city'] = {
-                    $regex: new RegExp(filters.city, 'i')
-                };
-            }
-            if (filters.governorate) {
-                clinicConditions['clinicInfo.address.governorate'] = {
-                    $regex: new RegExp(filters.governorate, 'i')
-                };
-            }
-            Object.assign(query, clinicConditions);
-        }
-
-        if (filters.availableToday === true) {
-            const today = new Date();
-            const dayName = today.toLocaleDateString('en-US', { weekday: 'long' });
-
-            query.$or = [
-                { 'clinicInfo.availableHours.day': dayName },
-                {
-                    'telemedicine.enabled': true,
-                    'telemedicine.availableHours.day': dayName
-                }
-            ];
-        }
+        const query = doctorHelper.buildQueryFilters(filters);
 
         const selectFields = [
             'firstName',
@@ -491,13 +447,6 @@ class DoctorService {
         }
 
         const formattedDoctors = doctors.map(doctor => {
-            let lowestPriceClinic = null;
-            if (doctor.clinicInfo && doctor.clinicInfo.length > 0) {
-                lowestPriceClinic = doctor.clinicInfo.reduce((min, clinic) =>
-                    clinic.consultationFee < min.consultationFee ? clinic : min
-                );
-            }
-
             return {
                 id: doctor._id,
                 name: `${doctor.firstName} ${doctor.lastName}`,
@@ -505,11 +454,11 @@ class DoctorService {
                 profileImage: doctor.profileImage || null,
                 rating: doctor.rating || 0,
                 reviewsCount: doctor.stats?.totalReviews || 0,
-                clinic: lowestPriceClinic ? {
-                    name: lowestPriceClinic.clinicName,
-                    city: lowestPriceClinic.address?.city,
-                    governorate: lowestPriceClinic.address?.governorate,
-                    consultationFee: lowestPriceClinic.consultationFee
+                clinic: doctor.clinicInfo && doctor.clinicInfo.length > 0 ? {
+                    name: doctor.clinicInfo[0].clinicName,
+                    city: doctor.clinicInfo[0].address.city,
+                    governorate: doctor.clinicInfo[0].address.governorate,
+                    consultationFee: doctor.clinicInfo[0].consultationFee
                 } : null,
                 gender: doctor.gender
             };

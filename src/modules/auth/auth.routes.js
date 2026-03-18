@@ -42,7 +42,8 @@ router.get('/google/callback',
   }),
   authController.googleCallback
 );
-router.post('/google/complete-registration', 
+router.post('/google/complete-registration',
+    validateReq(authValidators.completeGoogleRegistrationSchema),
     authController.completeGoogleRegistration
 );
 

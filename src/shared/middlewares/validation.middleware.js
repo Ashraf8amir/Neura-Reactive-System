@@ -1,13 +1,23 @@
 const AppError = require('../../core/appError.js');
 const { HTTP_STATUS_TEXT } = require('../constants/enums.js');
 
+
 const validateRequest = (schema) => {
     return (req, res, next) => {
-        const { error } = schema(req.body);
+        const toValidate = {
+            body: req.body,
+            query: req.query,
+            params: req.params
+        };
+
+        const { error, value } = schema.validate(toValidate, { 
+            abortEarly: false,
+            stripUnknown: true
+        });
         
         if (error) {
             const errors = error.details.map(detail => ({
-                field: detail.path[0],
+                field: detail.path.join('.'),
                 message: detail.message
             }));
 
@@ -18,8 +28,12 @@ const validateRequest = (schema) => {
             ));
         }
 
+        if (value.body) req.body = value.body;
+        if (value.query) req.query = value.query;
+        if (value.params) req.params = value.params;
+
         next();
     };
 };
 
-module.exports =  validateRequest ;
+module.exports = validateRequest;

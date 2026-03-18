@@ -2,8 +2,8 @@ const joi = require('joi');
 const passwordComplexity = require('joi-password-complexity');
 const enums = require('../../shared/constants/enums');
 
-exports.registerSchema = (data) => {
-    const schema = joi.object({
+exports.registerSchema = joi.object({
+    body: joi.object({
         firstName: joi.string().trim().min(2).max(30).required()
             .pattern(/^[\u0600-\u06FFa-zA-Z\s]+$/)
             .messages({
@@ -39,13 +39,11 @@ exports.registerSchema = (data) => {
                 'any.only': 'Gender must be either male or female',
                 'any.required': 'Gender is required'
             })
-
     })
-    return schema.validate(data, { abortEarly: false });
-};
+});
 
-exports.loginSchema = (data) => {
-    const schema = joi.object({
+exports.loginSchema = joi.object({
+    body: joi.object({
         email: joi.string().email().required().messages({
             'string.email': 'Please enter a valid email address',
             'any.required': 'Email is required'
@@ -53,12 +51,11 @@ exports.loginSchema = (data) => {
         password: joi.string().required().messages({
             'any.required': 'Password is required'
         })
-    });
-    return schema.validate(data, { abortEarly: false });
-};
+    })
+});
 
-exports.completeGoogleRegistrationSchema = (data) => {
-    const schema = joi.object({
+exports.completeGoogleRegistrationSchema = joi.object({
+    body: joi.object({
         role: joi.string().valid(...Object.values(enums.ROLE)).required().messages({
             'any.only': 'Role must be either doctor, patient, nurse, or pharmacy',
             'any.required': 'Role is required'
@@ -78,22 +75,20 @@ exports.completeGoogleRegistrationSchema = (data) => {
         tempToken: joi.string().required().messages({
             'any.required': 'Temporary token is required'
         })
-    });
-    return schema.validate(data, { abortEarly: false });
-};
+    })
+});
 
-exports.forgotPasswordSchema = (data) => {
-    const schema = joi.object({
+exports.forgotPasswordSchema = joi.object({
+    body: joi.object({
         email: joi.string().email().required().messages({
             'string.email': 'Please provide a valid email address',
             'any.required': 'Email is required'
         })
-    });
-    return schema.validate(data);
-};
+    })
+});
 
-exports.resetPasswordSchema = (data) => {
-    const schema = joi.object({
+exports.resetPasswordSchema = joi.object({
+    body: joi.object({
         newPassword: passwordComplexity().required().messages({
             'any.required': 'New password is required'
         }),
@@ -102,11 +97,11 @@ exports.resetPasswordSchema = (data) => {
             'string.empty': 'Confirm password is required',
             'any.required': 'Confirm password is required'
         })
-    });
-    return schema.validate(data);
-};
-exports.changePasswordSchema = (data) => {
-    const schema = joi.object({
+    })
+});
+
+exports.changePasswordSchema = joi.object({
+    body: joi.object({
         currentPassword: joi.string().required().messages({
             'any.required': 'Current password is required'
         }),
@@ -118,17 +113,15 @@ exports.changePasswordSchema = (data) => {
             'string.empty': 'Confirm password is required',
             'any.required': 'Confirm password is required'
         })
-    });
-    return schema.validate(data, { abortEarly: false });
-};
+    })
+});
 
-exports.verifyEmailSchema = (data) => {
-    const schema = joi.object({
+exports.verifyEmailSchema = joi.object({
+    body: joi.object({
         otp: joi.string().length(6).pattern(/^[0-9]+$/).required().messages({
             'string.length': 'OTP must be exactly 6 digits',
             'string.pattern.base': 'OTP must contain only numbers',
             'any.required': 'OTP is required'
         })
-    });
-    return schema.validate(data, { abortEarly: false });
-};
+    })
+});

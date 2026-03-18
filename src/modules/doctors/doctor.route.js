@@ -16,6 +16,7 @@ router.get("/",
     validateReq(doctorValidators.browseDoctorsSchema),
     doctorController.browseDoctors
 );
+router.get("/:id", doctorController.getDoctorProfile );
 
 // ============ Protected Routes ============
 router.use(authorizeRoles(enums.ROLE.DOCTOR));

@@ -439,3 +439,19 @@ exports.browseDoctors = asyncWrapper(async (req, res) => {
         pagination
     );
 });
+/** 
+    * @desc Get doctor profile by ID (public endpoint)
+    * @route GET /api/v1/doctors/:id
+    * @access Public
+*/
+exports.getDoctorProfile = asyncWrapper(async (req, res) => {
+    const doctorProfile = await service.getDoctorById(req.params.id);
+
+    return new ApiResponse(
+        res,
+        200,
+        HTTP_STATUS_TEXT.SUCCESS,
+        'Doctor profile retrieved successfully',
+        { doctorProfile }
+    );
+});
