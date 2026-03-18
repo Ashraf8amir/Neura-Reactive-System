@@ -11,6 +11,13 @@ const uploadMiddleware = require('../../shared/middlewares/upload.middleware.js'
 const router = express.Router();
 
 router.use(verifyToken);
+
+router.get("/",
+    validateReq(doctorValidators.browseDoctorsSchema),
+    doctorController.browseDoctors
+);
+
+// ============ Protected Routes ============
 router.use(authorizeRoles(enums.ROLE.DOCTOR));
 
 router.get("/me/basic-info",

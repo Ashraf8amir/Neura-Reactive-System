@@ -406,3 +406,36 @@ exports.submitForReview = asyncWrapper(async (req, res) => {
         { result }
     );
 });
+/**
+    * @desc Browse and filter doctors (public endpoint)
+    * @route GET /api/v1/doctors
+    * @access Public
+*/
+exports.browseDoctors = asyncWrapper(async (req, res) => {
+    const filters = {
+        specialization: req.query.specialization,
+        city: req.query.city,
+        governorate: req.query.governorate,
+        gender: req.query.gender,
+        minRating: req.query.minRating,
+        availableToday: req.query.availableToday === 'true'
+    };
+
+    const options = {
+        page: parseInt(req.query.page) || 1,
+        limit: parseInt(req.query.limit) || 10,
+        sortBy: req.query.sortBy || 'rating',
+        sortOrder: req.query.sortOrder || 'desc'
+    };
+
+    const { data, pagination } = await service.browseDoctors(filters, options);
+
+    return new ApiResponse(
+        res,
+        200,
+        HTTP_STATUS_TEXT.SUCCESS,
+        'Doctors retrieved successfully',
+        data,
+        pagination
+    );
+});

@@ -384,7 +384,6 @@ class AppointmentService {
         
         const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').trim();
         baseQuery.appointmentNumber = { $regex: escapedTerm, $options: 'i' };
-        logger.info('Searching appointments', { userId: user, userRole, searchTerm, options });
 
         const skip = (page - 1) * limit;
         const sortOptions = { createdAt: sortOrder === 'asc' ? 1 : -1 };

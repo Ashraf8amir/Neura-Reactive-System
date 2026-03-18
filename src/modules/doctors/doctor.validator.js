@@ -222,3 +222,22 @@ exports.uploadSyndicateCardSchema = (data) => {
 
     return uploadSyndicateCardSchema.validate(data, { abortEarly: false });
 }
+
+exports.browseDoctorsSchema = (data) => {
+    const browseDoctorsSchema = joi.object({
+        page: joi.number().integer().min(1).default(1),
+        limit: joi.number().integer().min(1).max(100).default(10),
+
+        sortBy: joi.string().valid('rating', 'price').default('rating'),
+        sortOrder: joi.string().valid('asc', 'desc').default('desc'),
+
+        specialization: joi.string().trim(),
+        city: joi.string().trim(),
+        governorate: joi.string().trim(),
+        gender: joi.string().valid('male', 'female'),
+        minRating: joi.number().min(0).max(5),
+        availableToday: joi.boolean()
+    });
+
+    return browseDoctorsSchema.validate(data, { abortEarly: false });
+}

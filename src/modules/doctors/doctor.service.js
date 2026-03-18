@@ -2,7 +2,7 @@ const Doctor = require('./doctor.model');
 const AppError = require('../../core/appError');
 const { HTTP_STATUS_TEXT } = require('../../shared/constants/enums.js');
 const doctorHelper = require('./doctor.helper')
-const { buildPatchUpdate } = require('../../shared/utils/globalHelper');
+const { buildPatchUpdate, getPagination } = require('../../shared/utils/globalHelper');
 const cloudinaryService = require('../../config/cloudinary');
 const enums = require('../../shared/constants/enums');
 
@@ -384,6 +384,142 @@ class DoctorService {
 
         return { status: doctor.accountStatus };
     };
-}   
+
+    async browseDoctors(filters = {}, options = {}) {
+        const {
+            page = 1,
+            limit = 10,
+            sortBy = 'rating',
+            sortOrder = 'desc'
+        } = options;
+
+        const query = {
+            accountStatus: 'active',
+        };
+
+        if (filters.specialization) {
+            query['professionalInfo.primarySpecialization'] = filters.specialization;
+        }
+
+        if (filters.gender) {
+            query.gender = filters.gender;
+        }
+
+        if (filters.minRating !== undefined) {
+            query.rating = { $gte: parseFloat(filters.minRating) };
+        }
+
+        if (filters.city || filters.governorate) {
+            const clinicConditions = {};
+            if (filters.city) {
+                clinicConditions['clinicInfo.address.city'] = {
+                    $regex: new RegExp(filters.city, 'i')
+                };
+            }
+            if (filters.governorate) {
+                clinicConditions['clinicInfo.address.governorate'] = {
+                    $regex: new RegExp(filters.governorate, 'i')
+                };
+            }
+            Object.assign(query, clinicConditions);
+        }
+
+        if (filters.availableToday === true) {
+            const today = new Date();
+            const dayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+
+            query.$or = [
+                { 'clinicInfo.availableHours.day': dayName },
+                {
+                    'telemedicine.enabled': true,
+                    'telemedicine.availableHours.day': dayName
+                }
+            ];
+        }
+
+        const selectFields = [
+            'firstName',
+            'lastName',
+            'profileImage',
+            'gender',
+            'professionalInfo.primarySpecialization',
+            'clinicInfo.clinicName',
+            'clinicInfo.address.city',
+            'clinicInfo.address.governorate',
+            'clinicInfo.consultationFee',
+            'rating',
+            'stats.totalReviews'
+        ].join(' ');
+
+        const skip = (page - 1) * limit;
+
+        let doctors;
+        let total;
+
+        if (sortBy === 'rating') {
+            const sortOptions = { rating: sortOrder === 'asc' ? 1 : -1 };
+
+            [doctors, total] = await Promise.all([
+                Doctor.find(query)
+                    .select(selectFields)
+                    .sort(sortOptions)
+                    .skip(skip)
+                    .limit(parseInt(limit))
+                    .lean(),
+                Doctor.countDocuments(query)
+            ]);
+        } else {
+            [doctors, total] = await Promise.all([
+                Doctor.find(query)
+                    .select(selectFields)
+                    .lean(),
+                Doctor.countDocuments(query)
+            ]);
+
+            doctors = doctors.map(doctor => {
+                const lowestFee = doctor.clinicInfo && doctor.clinicInfo.length > 0
+                    ? Math.min(...doctor.clinicInfo.map(c => c.consultationFee))
+                    : Infinity;
+                return { ...doctor, lowestFee };
+            });
+
+            doctors.sort((a, b) =>
+                sortOrder === 'asc' ? a.lowestFee - b.lowestFee : b.lowestFee - a.lowestFee
+            );
+
+            doctors = doctors.slice(skip, skip + parseInt(limit));
+        }
+
+        const formattedDoctors = doctors.map(doctor => {
+            let lowestPriceClinic = null;
+            if (doctor.clinicInfo && doctor.clinicInfo.length > 0) {
+                lowestPriceClinic = doctor.clinicInfo.reduce((min, clinic) =>
+                    clinic.consultationFee < min.consultationFee ? clinic : min
+                );
+            }
+
+            return {
+                id: doctor._id,
+                name: `${doctor.firstName} ${doctor.lastName}`,
+                specialization: doctor.professionalInfo?.primarySpecialization || 'General',
+                profileImage: doctor.profileImage || null,
+                rating: doctor.rating || 0,
+                reviewsCount: doctor.stats?.totalReviews || 0,
+                clinic: lowestPriceClinic ? {
+                    name: lowestPriceClinic.clinicName,
+                    city: lowestPriceClinic.address?.city,
+                    governorate: lowestPriceClinic.address?.governorate,
+                    consultationFee: lowestPriceClinic.consultationFee
+                } : null,
+                gender: doctor.gender
+            };
+        });
+
+        return {
+            data: formattedDoctors,
+            pagination: getPagination(total, page, limit)
+        };
+    };
+}
 
 module.exports = new DoctorService();
