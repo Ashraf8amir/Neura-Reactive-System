@@ -104,7 +104,7 @@ class AppointmentHelpers {
           };
       }
 
-      const fieldsToDelete = ['_id', '__v', 'isDeleted', 'deletedAt', 'deletedBy', 'createdAt', 'updatedAt'];
+      const fieldsToDelete = ['__v', 'isDeleted', 'deletedAt', 'deletedBy', 'createdAt', 'updatedAt'];
       fieldsToDelete.forEach(field => delete appointment[field]);
 
       return appointment;
