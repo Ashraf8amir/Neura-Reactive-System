@@ -35,7 +35,13 @@ const config = {
     paymobIntegrationIdCard: process.env.PAYMOB_INTEGRATION_ID_CARD,
     paymobIntegrationIdWallet: process.env.PAYMOB_INTEGRATION_ID_WALLET,
     paymobIframeId: process.env.PAYMOB_IFRAME_ID,
-    paymobHmacSecret: process.env.PAYMOB_HMAC_SECRET
+    paymobHmacSecret: process.env.PAYMOB_HMAC_SECRET,
+
+
+    assemblyAiApiKey: process.env.ASSEMBLYAI_API_KEY,
+    openRouterApiKey: process.env.OPENROUTER_API_KEY,
+    pineconeApiKey: process.env.PINECONE_API_KEY,
+    pineconeIndex: process.env.PINECONE_INDEX,
 };
 
 module.exports = config;

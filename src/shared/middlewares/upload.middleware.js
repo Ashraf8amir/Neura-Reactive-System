@@ -28,6 +28,14 @@ const imageAndPdfFilter = (req, file, cb) => {
     cb(null, true) : 
     cb(new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Only image and PDF files are allowed'), false);
 };
+const audioFilter = (req, file, cb) => {
+    const allowedTypes = ['audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/m4a', 'audio/x-m4a'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new AppError(400, HTTP_STATUS_TEXT.FAIL, 'Only audio files are allowed'), false);
+    }
+};
 
 const uploadImage = multer({
     storage: storage,
@@ -50,6 +58,11 @@ const uploadImageOrPDF = multer({
         fileSize: 10 * 1024 * 1024 
     }
 });
+const uploadAudio = multer({
+    storage: storage,
+    fileFilter: audioFilter,
+    limits: { fileSize: 25 * 1024 * 1024 }  // 25MB
+});
 
 module.exports = {
     uploadProfileImage: uploadImage.single('profileImage'),
@@ -63,5 +76,7 @@ module.exports = {
     uploadMixed: uploadImageOrPDF.fields([
         { name: 'profileImage', maxCount: 1 },
         { name: 'documents', maxCount: 5 }
-    ])
+    ]),
+
+    uploadAudioFile: uploadAudio.single('audio')
 };

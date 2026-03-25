@@ -1,7 +1,7 @@
 const express = require('express');
 const appointmentController = require('./appointment.controller');
 const verifyToken = require('../../shared/middlewares/verifyToken.middleware.js');
-const validateReq = require('../../shared/middlewares/validation.middleware.js'); 
+const validateReq = require('../../shared/middlewares/validation.middleware.js');
 const appointmentValidators = require('./appointment.validator.js');
 const authorizeRoles = require('../../shared/middlewares/roleCheck.middleware.js');
 const uploadMiddleware = require('../../shared/middlewares/upload.middleware.js');
@@ -39,7 +39,10 @@ router.patch('/:id/visit-info',
     validateReq(appointmentValidators.updatePatientVisitInfoSchema),
     appointmentController.updatePatientVisitInfo
 );
-
-
+router.patch('/:appointmentId/status',
+    authorizeRoles(ROLE.DOCTOR),
+    validateReq(appointmentValidators.updateStatusSchema),
+    appointmentController.updateStatus
+);
 
 module.exports = router;

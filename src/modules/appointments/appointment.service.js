@@ -713,6 +713,76 @@ class AppointmentService {
 
         return appointment;
     }
+
+    async updateStatus(appointmentId, newStatus, doctorId) {
+        const appointment = await Appointment.findById(appointmentId);
+        if (!appointment) {
+            throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Appointment not found');
+        }
+
+        if (appointment.doctor.toString() !== doctorId.toString()) {
+            throw new AppError(403, HTTP_STATUS_TEXT.FORBIDDEN, 'You can only update status of your own appointments');
+        }
+
+        const terminalStates = [this.statuses.COMPLETED, this.statuses.CANCELLED, this.statuses.NO_SHOW];
+        if (terminalStates.includes(appointment.status)) {
+            throw new AppError(400, HTTP_STATUS_TEXT.BAD_REQUEST, `Cannot change status of ${appointment.status} appointment`);
+        }
+
+        const validTransitions = {
+            [this.statuses.PENDING]: [this.statuses.CONFIRMED],
+            [this.statuses.CONFIRMED]: [this.statuses.CHECKEDIN, this.statuses.NO_SHOW],
+            [this.statuses.CHECKEDIN]: [this.statuses.INPROGRESS],
+            [this.statuses.INPROGRESS]: [this.statuses.COMPLETED, this.statuses.NO_SHOW]
+        };
+
+        const allowedNextStatuses = validTransitions[appointment.status] || [];
+        if (!allowedNextStatuses.includes(newStatus)) {
+            throw new AppError(400, HTTP_STATUS_TEXT.BAD_REQUEST, `Invalid status transition from '${appointment.status}' to '${newStatus}'`);
+        }
+
+        const previousStatus = appointment.status;
+
+        if (newStatus === this.statuses.CHECKEDIN) {
+            appointment.status = this.statuses.CHECKEDIN;
+            appointment.checkIn = {
+                checkedInAt: new Date(),
+                checkedInBy: doctorId
+            };
+        } else if (newStatus === this.statuses.COMPLETED) {
+            appointment.status = this.statuses.COMPLETED;
+            appointment.completedAt = new Date();
+            if (appointment.checkIn?.checkedInAt) {
+                const duration = (new Date() - appointment.checkIn.checkedInAt) / (1000 * 60);
+                appointment.actualDuration = Math.round(duration);
+            }
+        } else if (newStatus === this.statuses.NO_SHOW) {
+            appointment.status = this.statuses.NO_SHOW;
+            await Patient.findByIdAndUpdate(appointment.patient, {
+                $inc: { 'blacklist.blacklistPoints': 1 }
+            });
+        } else {
+            appointment.status = newStatus;
+        }
+
+        appointment.statusHistory.push({
+            status: newStatus,
+            changedBy: doctorId,
+            changedAt: new Date(),
+            reason: `Status changed to ${newStatus} by doctor`
+        });
+
+        await appointment.save();
+
+        logger.info('Appointment status updated', {
+            appointmentId,
+            previousStatus,
+            newStatus,
+            changedBy: doctorId
+        });
+
+        return appointment;
+    }
 }
 
 

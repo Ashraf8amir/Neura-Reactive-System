@@ -106,3 +106,24 @@ exports.updatePatientVisitInfoSchema = joi.object({
       }).optional()
     })
 });
+
+exports.updateStatusSchema = joi.object({
+    params: joi.object({
+        appointmentId: joi.string()
+            .pattern(/^[0-9a-fA-F]{24}$/)
+            .required()
+            .messages({
+                'string.pattern.base': 'Invalid appointment ID format',
+                'any.required': 'Appointment ID is required'
+            })
+    }),
+    body: joi.object({
+        status: joi.string()
+            .valid(...Object.values(appointmentConstants.APPOINTMENT_STATUSES))
+            .required()
+            .messages({
+                'any.only': 'Invalid status value. Must be one of: confirmed, checkedIn, inProgress, completed, noShow',
+                'any.required': 'Status is required'
+            })
+    })
+});

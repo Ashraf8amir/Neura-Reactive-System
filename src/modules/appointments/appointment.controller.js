@@ -284,3 +284,24 @@ exports.updatePatientVisitInfo = asyncWrapper(async (req, res) => {
     );
 });
 
+/**
+    * @desc    Update appointment status
+    * @route   PATCH /api/v1/appointments/:appointmentId/status
+    * @access  Private (Doctors only)
+    * @bodyParams status (confirmed, checkedIn, inProgress, completed, noShow)
+*/
+exports.updateStatus = asyncWrapper(async (req, res) => {
+    const { appointmentId } = req.params;
+    const { status } = req.body;
+    const doctorId = req.user.id;
+
+    const updatedAppointment = await service.updateStatus(appointmentId, status, doctorId);
+
+    return new ApiResponse(
+        res,
+        200,
+        HTTP_STATUS_TEXT.SUCCESS,
+        `Appointment status updated to '${status}'`,
+        updatedAppointment
+    );
+});

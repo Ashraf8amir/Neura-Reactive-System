@@ -102,3 +102,19 @@ exports.getResourceType = (url) => {
         return 'image';
     }
 };
+exports.uploadAudioToCloudinary = async (fileBuffer, fileName, mimetype) => {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                folder: 'ai-voice-recordings',
+                resource_type: 'video',  // Cloudinary uses 'video' for audio
+                public_id: `${Date.now()}_${fileName.split('.')[0]}`,
+            },
+            (error, result) => {
+                if (error) reject(new Error(`Cloudinary Error: ${error.message}`));
+                else resolve(result.secure_url);
+            }
+        );
+        uploadStream.end(fileBuffer);
+    });
+};
