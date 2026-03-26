@@ -113,12 +113,18 @@ class AiVoiceService {
 
         // Use searchRecords for integrated embedding index
         const results = await this.pineconeIndex
-            .namespace(aiVoiceConstants.PINECONE_NAMESPACE)
-            .searchRecords({
-                query: { inputs: { text: 'Patient medical visit history' } },
-                topK: aiVoiceConstants.PINECONE_TOP_K,
-                filter: { patientId: { "$eq": patientId.toString() } }
-            });
+        .namespace(aiVoiceConstants.PINECONE_NAMESPACE)
+        .searchRecords({
+            query: {
+                top_k: 3,
+                inputs: {
+                    text: 'Patient medical visit history'
+                },
+                filter: {
+                    patientId: patientId.toString()
+                }
+            }
+        });
 
         if (!results.result?.hits || results.result?.hits.length === 0) return '';
 
@@ -191,7 +197,6 @@ class AiVoiceService {
             
             logger.error('OpenRouter API request failed', { error: error.message, status });
             
-            // Try fallback model if primary model failed
             if (!useFallback && isTransientError) {
                 logger.warn('Primary model unavailable, trying fallback model');
                 return this.generateSummary(transcript, patientInfo, previousVisits, 0, true);
@@ -213,21 +218,6 @@ class AiVoiceService {
         }
 
         const vectorId = 'visit_' + String(patientId) + '_' + Date.now();
-        const record = {
-            _id: vectorId,
-            patientId: String(patientId),
-            doctorId: doctorId ? String(doctorId) : 'unknown',
-            appointmentId: appointmentId ? String(appointmentId) : '',
-            summary: summary.summary || '',
-            diagnosis: summary.diagnosis || '',
-            symptoms: Array.isArray(summary.symptoms) ? summary.symptoms.join(', ') : '',
-            treatment_plan: typeof summary.treatment_plan === 'object' ? JSON.stringify(summary.treatment_plan) : (summary.treatment_plan || ''),
-            follow_up: typeof summary.follow_up === 'object' ? JSON.stringify(summary.follow_up) : (summary.follow_up || ''),
-            alerts: JSON.stringify(summary.alerts || {}),
-            urgency_level: summary.urgency_level || 'routine',
-            createdAt: new Date().toISOString()
-        };
-        
         const embeddingText = [
             'Patient visit summary:',
             summary.summary || '',
@@ -238,11 +228,8 @@ class AiVoiceService {
             'Alerts: ' + (JSON.stringify(summary.alerts) || '{}'),
             'Urgency: ' + (summary.urgency_level || 'routine')
         ].join(' ');
-        
-        record.text = embeddingText;
 
         try {
-            logger.debug('Upserting to Pinecone', { vectorId: vectorId, recordKeys: Object.keys(record) });
             const recordToUpsert = {
                 _id: vectorId,
                 text: embeddingText,

@@ -88,12 +88,19 @@ The JSON should follow this structure:
 {
   "symptoms": [],
   "diagnosis": "",
-  "treatment_plan": {
-    "medications": [],
-    "procedures": [],
+  "prescription": {
+    "medications": [
+        {
+            "name": "",
+            "dose": "",
+            "frequency": "",
+            "duration": "",
+            "notes": ""
+        }
+    ],
     "lifestyle_advice": ""
-  },
-  "summary": "",
+   },
+  "summary": "",    
   "follow_up": "",
   "urgency_level": "routine | urgent | emergency",
   "alerts": {
@@ -107,13 +114,16 @@ The JSON should follow this structure:
 Rules:
 - symptoms: all symptoms mentioned by the patient
 - diagnosis: preliminary diagnosis based on conversation + patient history
-- treatment_plan.medications: ONLY include NEW medications prescribed by the doctor during this visit, DO NOT include patient's existing medications.
+- prescription.medications: ONLY include NEW medications prescribed by the doctor 
+  during this visit as structured objects with name, dose, frequency, duration, notes.
+  DO NOT include patient's existing medications.
+  If dose or duration not mentioned, set as "not specified".
 - urgency_level: your assessment of how urgent this case is
 - alerts: CRITICAL — check current medications against any new prescriptions mentioned
 - clearly distinguish between:
     - Current medications (from patient history)
     - New prescriptions (from this visit)
-- summary: 3-4 sentences max`;
+- summary: 3-4 sentences max`;  
 };
 
 const parseJsonResponse = (response) => {
@@ -136,7 +146,7 @@ const parseJsonResponse = (response) => {
         diagnosis: '',
         summary: '',
         follow_up: '',
-        treatment_plan: { medications: [], procedures: [], lifestyle_advice: '' },
+        prescription: { medications: [], lifestyle_advice: '' },
         alerts: { drug_interactions: [], allergy_conflicts: [], requires_immediate_attention: false },
         urgency_level: 'routine'
     };
@@ -147,10 +157,9 @@ const parseJsonResponse = (response) => {
         }
     }
 
-    parsed.treatment_plan = parsed.treatment_plan || {};
-    parsed.treatment_plan.medications = parsed.treatment_plan.medications || [];
-    parsed.treatment_plan.procedures = parsed.treatment_plan.procedures || [];
-    parsed.treatment_plan.lifestyle_advice = parsed.treatment_plan.lifestyle_advice || '';
+    parsed.prescription = parsed.prescription || {};
+    parsed.prescription.medications = parsed.prescription.medications || [];
+    parsed.prescription.lifestyle_advice = parsed.prescription.lifestyle_advice || '';
 
     parsed.alerts = parsed.alerts || {};
     parsed.alerts.drug_interactions = parsed.alerts.drug_interactions || [];
