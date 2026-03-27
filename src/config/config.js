@@ -42,6 +42,7 @@ const config = {
     openRouterApiKey: process.env.OPENROUTER_API_KEY,
     pineconeApiKey: process.env.PINECONE_API_KEY,
     pineconeIndex: process.env.PINECONE_INDEX,
+    groqApiKey: process.env.GROQ_API_KEY,
 };
 
 module.exports = config;

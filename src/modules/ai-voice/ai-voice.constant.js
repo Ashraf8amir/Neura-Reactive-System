@@ -5,8 +5,8 @@ exports.aiVoiceConstants = Object.freeze({
     ASSEMBLYAI_SPEECH_MODEL: 'universal-2',  
     PINECONE_NAMESPACE: 'medical-visits',
     PINECONE_TOP_K: 3,
-    LLAMA_MODEL: 'meta-llama/llama-3.1-70b-instruct',
-    FALLBACK_MODEL: 'meta-llama/llama-3.1-8b-instruct',
+    LLAMA_MODEL: 'llama-3.3-70b-versatile',
+    FALLBACK_MODEL: 'llama-3.1-8b-instant',
     LLAMA_MAX_RETRIES: 2,
     LLAMA_TRANSIENT_RETRIES: 3,
     ERROR_MESSAGES: {

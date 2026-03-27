@@ -142,7 +142,7 @@ class AiVoiceService {
     }
 
     async generateSummary(transcript, patientInfo, previousVisits, retryCount = 0, useFallback = false) {
-        if (!config.openRouterApiKey) {
+        if (!config.groqApiKey) {
             throw new AppError(500, HTTP_STATUS_TEXT.ERROR, 'LLM service not configured');
         }
 
@@ -150,16 +150,16 @@ class AiVoiceService {
 
         try {
             const response = await axios.post(
-                'https://openrouter.ai/api/v1/chat/completions',
+                'https://api.groq.com/openai/v1/chat/completions',
                 {
                     model: useFallback ? aiVoiceConstants.FALLBACK_MODEL : aiVoiceConstants.LLAMA_MODEL,
                     messages: [{ role: 'user', content: prompt }],
                     temperature: 0.3,
-                    max_tokens: 2500
+                    max_tokens: 1500
                 },
                 {
                     headers: {
-                        'Authorization': 'Bearer ' + config.openRouterApiKey,
+                        'Authorization': 'Bearer ' + config.groqApiKey,
                         'Content-Type': 'application/json',
                         'HTTP-Referer': config.backendUrl,
                         'X-Title': 'Sahtak Healthcare Platform'
@@ -186,7 +186,7 @@ class AiVoiceService {
             
             if (isTransientError && retryCount < aiVoiceConstants.LLAMA_TRANSIENT_RETRIES) {
                 const delay = Math.pow(2, retryCount) * 1000;
-                logger.warn('OpenRouter transient error, retrying...', { 
+                logger.warn('GROQ transient error, retrying...', { 
                     status, 
                     retryCount, 
                     delayMs: delay 
@@ -195,7 +195,7 @@ class AiVoiceService {
                 return this.generateSummary(transcript, patientInfo, previousVisits, retryCount + 1, useFallback);
             }
             
-            logger.error('OpenRouter API request failed', { error: error.message, status });
+            logger.error('GROQ API request failed', { error: error.message, status, model: useFallback ? aiVoiceConstants.FALLBACK_MODEL : aiVoiceConstants.LLAMA_MODEL });
             
             if (!useFallback && isTransientError) {
                 logger.warn('Primary model unavailable, trying fallback model');
