@@ -43,6 +43,7 @@ const config = {
     pineconeApiKey: process.env.PINECONE_API_KEY,
     pineconeIndex: process.env.PINECONE_INDEX,
     groqApiKey: process.env.GROQ_API_KEY,
+    grokApiKey: process.env.GROQ_API_KEY,
 };
 
 module.exports = config;

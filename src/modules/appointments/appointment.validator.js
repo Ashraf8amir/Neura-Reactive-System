@@ -127,3 +127,15 @@ exports.updateStatusSchema = joi.object({
             })
     })
 });
+
+exports.getPatientBriefSchema = joi.object({
+    params: joi.object({
+        appointmentId: joi.string()
+            .pattern(/^[0-9a-fA-F]{24}$/)
+            .required()
+            .messages({
+                'string.pattern.base': 'Invalid appointment ID format',
+                'any.required': 'Appointment ID is required'
+            })
+    })
+});

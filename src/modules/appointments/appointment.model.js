@@ -245,6 +245,15 @@ const appointmentSchema = new mongoose.Schema(
       _id: false
     },
 
+    patientBrief: {
+      content: { type: Object },
+      generatedAt: { type: Date },
+      generatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }
+    },
+
     vitalSigns: {
       bloodPressure: {
         systolic: Number,

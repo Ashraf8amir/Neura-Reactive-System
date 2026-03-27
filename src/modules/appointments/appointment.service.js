@@ -10,6 +10,9 @@ const { getPagination } = require('../../shared/utils/globalHelper.js');
 const { appointmentConstants } = require('./appointment.constant');
 const paymentService = require('../payments/payment.service');
 const cloudinaryService = require('../../config/cloudinary');
+const MedicalRecord = require('../medical-records/medicalRecord.model');
+const axios = require('axios');
+const config = require('../../config/config');
 
 
 class AppointmentService {
@@ -607,6 +610,7 @@ class AppointmentService {
             await session.endSession();
         }
     }
+    
     async cancelAppointment(appointmentId, userId, role, reason) {
         const session = await mongoose.startSession();
 
@@ -782,6 +786,91 @@ class AppointmentService {
         });
 
         return appointment;
+    }
+
+    async generatePatientBrief(appointmentId, doctorId) {
+        const appointment = await Appointment.findById(appointmentId)
+            .populate('patient', 'firstName lastName dateOfBirth gender bloodType medicalProfile age');
+
+        if (!appointment) {
+            throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Appointment not found');
+        }
+
+        if (appointment.doctor.toString() !== doctorId.toString()) {
+            throw new AppError(403, HTTP_STATUS_TEXT.FORBIDDEN, 'You are not assigned to this appointment');
+        }
+
+        if (![this.statuses.CHECKEDIN, this.statuses.INPROGRESS].includes(appointment.status)) {
+            throw new AppError(400, HTTP_STATUS_TEXT.BAD_REQUEST, 'Brief is available only for checked-in or in-progress appointments');
+        }
+
+        if (appointment.patientBrief?.content) {
+           appointment.patientBrief = {}; 
+        }
+
+        const patientId = appointment.patient?._id || appointment.patient;
+
+        const [patientProfile, latestRecords] = await Promise.all([
+            Patient.findById(patientId)
+                .select('firstName lastName gender bloodType medicalProfile dateOfBirth age maritalStatus ')
+                .lean(),
+            MedicalRecord.find({ patientId })
+                .sort({ visitDate: -1 })
+                .limit(3)
+                .select('visitDate aiSummary doctorNotes')
+                .lean()
+        ]);
+
+        const prompt = AppointmentHelpers.buildPatientBriefPrompt(patientProfile, appointment, latestRecords);
+
+        if (!config.grokApiKey) {
+            throw new AppError(500, HTTP_STATUS_TEXT.ERROR, 'Grok API key not configured');
+        }
+
+        let aiContent;
+        try {
+            const response = await axios.post(
+                'https://api.groq.com/openai/v1/chat/completions',
+                {
+                    model: "llama-3.3-70b-versatile",
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.3,
+                    max_tokens: 800
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${config.grokApiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 60000
+                }
+            );
+            const content = response.data.choices[0].message.content;
+            try {
+                aiContent = JSON.parse(content);
+            } catch (parseError) {
+                logger.error('Error parsing JSON response:', parseError);
+                throw new AppError(500, HTTP_STATUS_TEXT.ERROR, 'Failed to parse AI response');
+            }
+        } catch (error) {
+            if (error instanceof SyntaxError) {
+                throw new AppError(502, HTTP_STATUS_TEXT.ERROR, 'Failed to parse AI response');
+            }
+            throw new AppError(502, HTTP_STATUS_TEXT.ERROR, 'Failed to generate patient brief');
+        }
+
+        appointment.patientBrief = {
+            content: aiContent,
+            generatedAt: new Date(),
+            generatedBy: doctorId
+        };
+
+        await appointment.save();
+
+        return {
+            brief: aiContent,
+            generatedAt: appointment.patientBrief.generatedAt
+        };
     }
 }
 

@@ -17,22 +17,43 @@ router.post('/',
     validateReq(appointmentValidators.createAppointmentSchema),
     appointmentController.createAppointment
 );
-router.get('/', appointmentController.getAllAppointments);
-router.get('/count', appointmentController.countAppointments);
-router.get('/statistics', appointmentController.getAppointmentStatistics);
-router.get('/search', appointmentController.searchAppointments);
+router.get('/', 
+    appointmentController.getAllAppointments
+);
+router.get('/count', 
+    appointmentController.countAppointments
+);
+router.get('/statistics', 
+    appointmentController.getAppointmentStatistics
+);
+router.get('/search', 
+    appointmentController.searchAppointments
+);
 router.get('/today',
     authorizeRoles(ROLE.DOCTOR),
     appointmentController.getTodayAppointments
 );
-router.get('/upcoming', appointmentController.getUpcomingAppointments);
-router.get('/past', appointmentController.getPastAppointments);
-router.get('/available-slots/:doctorId', appointmentController.getAvailableSlots);
+router.get('/upcoming', 
+    appointmentController.getUpcomingAppointments
+);
+router.get('/past', 
+    appointmentController.getPastAppointments
+);
+router.get('/available-slots/:doctorId', 
+    appointmentController.getAvailableSlots
+);
+router.get('/:appointmentId/patient-brief',
+    authorizeRoles(ROLE.DOCTOR),
+    validateReq(appointmentValidators.getPatientBriefSchema),
+    appointmentController.getPatientBrief
+);
 router.post('/:id/reschedule',
     validateReq(appointmentValidators.rescheduleAppointmentSchema),
     appointmentController.rescheduleAppointment
 );
-router.post('/:id/cancel', appointmentController.cancelAppointment);
+router.post('/:id/cancel', 
+    appointmentController.cancelAppointment
+);
 router.patch('/:id/visit-info',
     uploadMiddleware.uploadVisitAttachments,
     parseJsonBodyFields(['patientProvidedInfo']),

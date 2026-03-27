@@ -305,3 +305,23 @@ exports.updateStatus = asyncWrapper(async (req, res) => {
         updatedAppointment
     );
 });
+
+/**
+    * @desc    Generate or fetch cached AI patient brief for an appointment
+    * @route   GET /api/v1/appointments/:appointmentId/patient-brief
+    * @access  Private (Doctors only)
+*/
+exports.getPatientBrief = asyncWrapper(async (req, res) => {
+    const { appointmentId } = req.params;
+    const doctorId = req.user.id;
+
+    const result = await service.generatePatientBrief(appointmentId, doctorId);
+
+    return new ApiResponse(
+        res,
+        200,
+        HTTP_STATUS_TEXT.SUCCESS,
+        'Patient brief generated successfully',
+        result
+    );
+});
