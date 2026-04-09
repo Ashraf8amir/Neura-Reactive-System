@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const { URGENCY_LEVEL } = require('./medicalRecord.constant');
+const logger = require('../../core/logger');
+const digitalTwinService = require('../digital-twin/digital-twin.service');
 
 const medicationSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -75,6 +77,20 @@ const medicalRecordSchema = new mongoose.Schema({
 
 medicalRecordSchema.index({ patientId: 1, visitDate: -1 });
 medicalRecordSchema.index({ patientId: 1, isVisibleToPatient: 1, visitDate: -1 });
+
+medicalRecordSchema.post('save', async function(doc, next) {
+    try {
+        await digitalTwinService.updateDigitalTwinFromMedicalRecord(doc);
+        next();
+    } catch (error) {
+        logger.error('Failed to update digital twin after medical record save', {
+            medicalRecordId: doc?._id?.toString(),
+            patientId: doc?.patientId?.toString(),
+            error: error.message
+        });
+        next(error);
+    }
+});
 
 const MedicalRecord = mongoose.model('MedicalRecord', medicalRecordSchema);
 
