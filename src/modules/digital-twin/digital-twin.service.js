@@ -147,6 +147,7 @@ class DigitalTwinService {
                     model: useFallback ? digitalTwinConstants.FALLBACK_MODEL : digitalTwinConstants.LLAMA_MODEL,
                     messages: [{ role: 'user', content: prompt }],
                     temperature: 0.3,
+                    top_p: 0.8,
                     max_tokens: 800
                 },
                 {
@@ -214,6 +215,7 @@ class DigitalTwinService {
                     model: useFallback ? digitalTwinConstants.FALLBACK_MODEL : digitalTwinConstants.LLAMA_MODEL,
                     messages: [{ role: 'user', content: prompt }],
                     temperature: 0.3,
+                    top_p: 0.8,
                     max_tokens: 1200
                 },
                 {
@@ -272,6 +274,7 @@ class DigitalTwinService {
     formatPatientProfileForPrompt(patient) {
         const medicalProfile = patient.medicalProfile || {};
         const lifestyle = medicalProfile.lifestyle || {};
+        
         const calculateAge = () => {
             if (!patient.dateOfBirth) return 'unknown';
             const birthDate = new Date(patient.dateOfBirth);

@@ -155,6 +155,7 @@ class AiVoiceService {
                     model: useFallback ? aiVoiceConstants.FALLBACK_MODEL : aiVoiceConstants.LLAMA_MODEL,
                     messages: [{ role: 'user', content: prompt }],
                     temperature: 0.3,
+                    top_p: 0.8,
                     max_tokens: 1500
                 },
                 {

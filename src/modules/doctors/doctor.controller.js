@@ -406,6 +406,31 @@ exports.submitForReview = asyncWrapper(async (req, res) => {
         { result }
     );
 });
+
+/**
+    * @desc Get doctor patients with their latest clinical status
+    * @route GET /api/v1/doctors/my-patients
+    * @access Private (Doctor)
+*/
+exports.getMyPatients = asyncWrapper(async (req, res) => {
+    const filters = {
+        page: req.query.page,
+        limit: req.query.limit,
+        status: req.query.status,
+        search: req.query.search
+    };
+
+    const { data, pagination } = await service.getMyPatients(req.user.id, filters);
+
+    return new ApiResponse(
+        res,
+        200,
+        HTTP_STATUS_TEXT.SUCCESS,
+        'Doctor patients retrieved successfully',
+        data,
+        pagination
+    );
+});
 /**
     * @desc Browse and filter doctors (public endpoint)
     * @route GET /api/v1/doctors

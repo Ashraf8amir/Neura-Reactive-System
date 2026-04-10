@@ -1,5 +1,6 @@
 const joi = require("joi");
 const enums = require("../../shared/constants/enums");
+const appointmentConstants = require("../appointments/appointment.constant");
 
 exports.updateBasicInfoSchema = joi.object({
     body: joi.object({
@@ -219,5 +220,14 @@ exports.browseDoctorsSchema = joi.object({
         gender: joi.string().valid('male', 'female'),
         minRating: joi.number().min(0).max(5),
         availableToday: joi.boolean()
+    })
+});
+
+exports.getMyPatientsSchema = joi.object({
+    query: joi.object({
+        page: joi.number().integer().min(1).default(1),
+        limit: joi.number().integer().min(1).max(50).default(10),
+        status: joi.string().valid('inPerson', 'telemedicine', 'followUp', 'emergency', 'consultation').optional(),
+        search: joi.string().trim().max(100).allow('').optional()
     })
 });

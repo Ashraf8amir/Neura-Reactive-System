@@ -5,11 +5,17 @@ const doctorHelper = require('./doctor.helper')
 const { buildPatchUpdate, getPagination } = require('../../shared/utils/globalHelper');
 const cloudinaryService = require('../../config/cloudinary');
 const enums = require('../../shared/constants/enums');
+const mongoose = require('mongoose');
+const Appointment = require('../appointments/appointment.model');
+const User = require('../../shared/models/user.model');
+const { appointmentConstants } = require('../appointments/appointment.constant');
 
 
 class DoctorService {
 
     selectBasicFields = 'firstName lastName fullName email phone dateOfBirth gender age role address nationality profileImage';
+    appointmentStatuses = appointmentConstants.APPOINTMENT_STATUSES;
+    appointmentTypes = appointmentConstants.APPOINTMENT_TYPES;
 
     async getDoctorById(doctorId) {
         const doctor = await Doctor.findById(doctorId);
@@ -393,6 +399,136 @@ class DoctorService {
         await doctor.save();
 
         return { status: doctor.accountStatus };
+    };
+
+    async getMyPatients(doctorId, filters = {}) {
+        await this.getDoctorById(doctorId);
+
+        const page = parseInt(filters.page, 10) || 1;
+        const limit = Math.min(parseInt(filters.limit, 10) || 10, 50);
+        const skip = (page - 1) * limit;
+
+        const escapedSearch = filters.search?.trim()
+            ? filters.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            : null;
+
+        const matchStage = {
+            doctor: new mongoose.Types.ObjectId(doctorId),
+            status: { $nin: [this.appointmentStatuses.CANCELLED, this.appointmentStatuses.NO_SHOW] },
+            isDeleted: false
+        };
+
+        if (filters.status) {
+            matchStage.appointmentType = filters.status;
+        }
+
+        const pipeline = [
+            { $match: matchStage },
+            { $sort: { scheduledDate: -1 } },
+            {
+                $group: {
+                    _id: '$patient',
+                    appointmentType: { $first: '$appointmentType' },
+                    lastVisit: { $first: '$scheduledDate' }
+                }
+            },
+            {
+                $facet: {
+                    patientsData: [
+                        {
+                            $lookup: {
+                                from: User.collection.name,
+                                let: { patientId: '$_id' },
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: { $eq: ['$_id', '$$patientId'] }
+                                        }
+                                    },
+                                    {
+                                        $project: {
+                                            firstName: 1,
+                                            lastName: 1,
+                                            profileImage: 1,
+                                            dateOfBirth: 1,
+                                            isDeleted: 1
+                                        }
+                                    }
+                                ],
+                                as: 'patient'
+                            }
+                        },
+                        { $unwind: '$patient' },
+                        { $match: { 'patient.isDeleted': { $ne: true } } },
+                        {
+                            $addFields: {
+                                age: {
+                                    $cond: [
+                                        { $ifNull: ['$patient.dateOfBirth', false] },
+                                        {
+                                            $floor: {
+                                                $divide: [
+                                                    { $subtract: [new Date(), '$patient.dateOfBirth'] },
+                                                    { $multiply: [365.25, 24, 60, 60, 1000] }
+                                                ]
+                                            }
+                                        },
+                                        null
+                                    ]
+                                },
+                                fullName: { $concat: ['$patient.firstName', ' ', '$patient.lastName'] }
+                            }
+                        },
+                        ...(escapedSearch ? [{ $match: { fullName: { $regex: escapedSearch, $options: 'i' } } }] : []),
+                        { $sort: { lastVisit: -1 } },
+                        { $skip: skip },
+                        { $limit: limit },
+                        {
+                            $project: {
+                                _id: 0,
+                                id: { $toString: '$patient._id' },
+                                firstName: '$patient.firstName',
+                                lastName: '$patient.lastName',
+                                profileImage: { $ifNull: ['$patient.profileImage.imageUrl', null] },
+                                age: 1,
+                                lastVisit: 1,
+                                appointmentType: 1
+                            }
+                        }
+                    ],
+                    totalCount: [
+                        { $count: 'total' }
+                    ],
+                    summary: [
+                        {
+                            $group: {
+                                _id: '$appointmentType',
+                                count: { $sum: 1 }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+
+        const result = await Appointment.aggregate(pipeline);
+
+        const patients = result[0].patientsData;
+        const total = result[0].totalCount[0]?.total || 0;
+        const summaryResult = result[0].summary;
+
+        const summary = { consultation: 0, inPerson: 0, followUp: 0, telemedicine: 0, emergency: 0 };
+        summaryResult.forEach((item) => {
+            if (item._id in summary) summary[item._id] = item.count;
+        });
+
+        return {
+            data: {
+                patients,
+                summary
+            },
+            pagination: getPagination(total, page, limit)
+        };
     };
 
     async browseDoctors(filters = {}, options = {}) {

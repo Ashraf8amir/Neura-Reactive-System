@@ -835,6 +835,7 @@ class AppointmentService {
                     model: "llama-3.3-70b-versatile",
                     messages: [{ role: 'user', content: prompt }],
                     temperature: 0.3,
+                    top_p: 0.8,
                     max_tokens: 800
                 },
                 {
