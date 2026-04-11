@@ -1,6 +1,5 @@
 const joi = require("joi");
 const enums = require("../../shared/constants/enums");
-const appointmentConstants = require("../appointments/appointment.constant");
 
 exports.updateBasicInfoSchema = joi.object({
     body: joi.object({
@@ -25,6 +24,8 @@ exports.updateBasicInfoSchema = joi.object({
         phone: joi.string().pattern(/^01[0-2,5]{1}[0-9]{8}$/).allow('', null).optional()
             .messages({ 'string.pattern.base': 'Phone number must be between 10 to 15 digits' }),
         nationality: joi.string().trim().min(2).max(50).valid('Egyptian', 'other').allow('', null).optional(),
+        nationalId: joi.string().pattern(/^[0-9]{14}$/).allow('', null).optional()
+                    .messages({ 'string.pattern.base': 'National ID must be exactly 14 digits' }),
         address: joi.object({
             governorate: joi.string().trim().allow('', null).optional()
                 .messages({ 'string.empty': 'Governorate cannot be empty' }),

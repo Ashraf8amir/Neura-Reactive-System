@@ -13,7 +13,7 @@ const { appointmentConstants } = require('../appointments/appointment.constant')
 
 class DoctorService {
 
-    selectBasicFields = 'firstName lastName fullName email phone dateOfBirth gender age role address nationality profileImage';
+    selectBasicFields = 'firstName lastName fullName email phone dateOfBirth gender age role address nationality profileImage nationalId';
     appointmentStatuses = appointmentConstants.APPOINTMENT_STATUSES;
     appointmentTypes = appointmentConstants.APPOINTMENT_TYPES;
 
@@ -28,7 +28,7 @@ class DoctorService {
     };
 
     async getDoctorBasicInfo(doctorId) {
-        return this.getDoctorById(doctorId, this.selectBasicFields);
+        return await Doctor.findById(doctorId).select(this.selectBasicFields);
     };
     async updateDoctorBasicInfo(doctorId, updateData){
         const doctor = await Doctor.findByIdAndUpdate(

@@ -7,7 +7,9 @@ const { patientConstants } = require('./patient.constant');
 
 const patientSchema = new mongoose.Schema({
   height: { type: Number, min: [0, "Height cannot be negative"] },
+
   weight: { type: Number, min: [0, "Weight cannot be negative"] },
+
   bloodType: {
     type: String,
     enum: {
@@ -15,12 +17,7 @@ const patientSchema = new mongoose.Schema({
       message: "{VALUE} is not a valid blood type",
     },
   },
-  nationalId: {
-    type: String,
-    unique: true,
-    sparse: true,
-    validate: validators.nationalId,
-  },
+
   maritalStatus: {
     type: String,
     enum: {
@@ -134,6 +131,7 @@ const patientSchema = new mongoose.Schema({
       email: { type: String, lowercase: true, trim: true, validate: validators.email },
     },
   ],
+
   accountStatus: {
     type: String,
     enum: {
@@ -142,6 +140,7 @@ const patientSchema = new mongoose.Schema({
     },
     default: enums.ACCOUNT_STATUS.INCOMPLETE,
   },
+  
   blacklist: { 
     blacklistPoints: { type: Number, default: 0 },
     isBlocked: { type: Boolean, default: false },

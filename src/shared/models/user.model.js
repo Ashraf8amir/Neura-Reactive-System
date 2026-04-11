@@ -85,6 +85,12 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: "Egyptian",
     },
+    nationalId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      validate: validators.nationalId,
+    },
     
     isActive: {
       type: Boolean,
