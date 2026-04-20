@@ -5,7 +5,7 @@ const chatService = require('./chat.service');
 
 /**
  * @desc    Create a new conversation or retrieve existing one between two users
- * @route   POST /api/chat/conversations
+ * @route   POST /api/v1/chat/conversations
  * @access  Private (Doctor and Patient)
  */
 exports.createConversation = asyncWrapper(async (req, res) => {
@@ -22,7 +22,7 @@ exports.createConversation = asyncWrapper(async (req, res) => {
 
 /**
  * @desc    Get all conversations for the authenticated user
- * @route   GET /api/chat/conversations
+ * @route   GET /api/v1/chat/conversations
  * @access  Private (Doctor and Patient)
  */
 exports.getConversations = asyncWrapper(async (req, res) => {
@@ -39,7 +39,7 @@ exports.getConversations = asyncWrapper(async (req, res) => {
 
 /**
  * @desc    Get messages for a specific conversation with pagination
- * @route   GET /api/chat/conversations/:conversationId/messages
+ * @route   GET /api/v1/chat/conversations/:conversationId/messages
  * @access  Private (Doctor and Patient)
  * @query   ?page=1&limit=20
  */
@@ -57,7 +57,7 @@ exports.getMessages = asyncWrapper(async (req, res) => {
 
 /**
  * @desc    Send a text message in a conversation
- * @route   POST /api/chat/conversations/:conversationId/messages
+ * @route   POST /api/v1/chat/conversations/:conversationId/messages
  * @access  Private (Doctor and Patient)
  */
 exports.sendMessage = asyncWrapper(async (req, res) => {
@@ -74,7 +74,7 @@ exports.sendMessage = asyncWrapper(async (req, res) => {
 
 /**
  * @desc    Send an attachment (image or PDF) in a conversation
- * @route   POST /api/chat/conversations/:conversationId/attachments
+ * @route   POST /api/v1/chat/conversations/:conversationId/attachments
  * @access  Private (Doctor and Patient)
  */
 exports.sendAttachment = asyncWrapper(async (req, res) => {
@@ -92,7 +92,7 @@ exports.sendAttachment = asyncWrapper(async (req, res) => {
 
 /**
  * @desc    Search messages across all conversations of the authenticated user
- * @route   GET /api/chat/conversations/search?q=keyword
+ * @route   GET /api/v1/chat/conversations/search?q=keyword
  * @access  Private (Doctor and Patient)
  */
 exports.searchMessages = asyncWrapper(async (req, res) => {
@@ -110,7 +110,7 @@ exports.searchMessages = asyncWrapper(async (req, res) => {
 
 /**
  * @desc    Mark a message as read
- * @route   PATCH /api/chat/messages/:messageId/read
+ * @route   PATCH /api/v1/chat/messages/:messageId/read
  * @access  Private (Doctor and Patient)
  */
 exports.markMessageRead = asyncWrapper(async (req, res) => {
@@ -119,4 +119,3 @@ exports.markMessageRead = asyncWrapper(async (req, res) => {
 
   return new ApiResponse(res, 200, HTTP_STATUS_TEXT.SUCCESS, 'Message marked as read', message);
 });
-

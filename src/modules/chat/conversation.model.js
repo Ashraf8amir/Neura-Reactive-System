@@ -40,4 +40,3 @@ conversationSchema.index({ 'lastMessage.sentAt': -1 });
 const Conversation = mongoose.model('Conversation', conversationSchema);
 
 module.exports = Conversation;
-

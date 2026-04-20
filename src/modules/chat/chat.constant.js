@@ -15,4 +15,3 @@ module.exports = Object.freeze({
   SEARCH_DEFAULT_LIMIT: 20,
   MIN_SEARCH_LENGTH: 2,
 });
-
