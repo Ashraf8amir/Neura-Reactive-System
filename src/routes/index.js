@@ -9,6 +9,7 @@ const aiVoiceRoutes = require('../modules/ai-voice/ai-voice.routes');
 const medicalRecordRoutes = require('../modules/medical-records/medicalRecord.routes');
 const digitalTwinRoutes = require('../modules/digital-twin/digital-twin.routes');
 const chatRoutes = require('../modules/chat/chat.routes');
+const therapyRoomRoutes = require('../modules/therapy-rooms/therapy-room.routes');
 const rateLimiter = require('../shared/middlewares/rateLimiter.middleware.js').globalLimiter;
 
 const router = express.Router();
@@ -24,6 +25,7 @@ router.use('/ai-voice', aiVoiceRoutes);
 router.use('/medical-records', medicalRecordRoutes);
 router.use('/digital-twin', digitalTwinRoutes);
 router.use('/chat', chatRoutes);
+router.use('/therapy-rooms', therapyRoomRoutes);
 
 
 module.exports = router;

@@ -111,7 +111,6 @@ class AiVoiceService {
     async getPreviousVisits(patientId) {
         if (!this.pineconeIndex) return '';
 
-        // Use searchRecords for integrated embedding index
         const results = await this.pineconeIndex
         .namespace(aiVoiceConstants.PINECONE_NAMESPACE)
         .searchRecords({

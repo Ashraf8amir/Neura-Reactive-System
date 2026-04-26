@@ -36,3 +36,5 @@ Thumbs.db
 
 # other
 .claude
+public/
+docs/

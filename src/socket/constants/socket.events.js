@@ -1,0 +1,33 @@
+module.exports = {
+  GET_ONLINE_USERS: 'presence:get_online_users',
+  ONLINE_USERS_SNAPSHOT: 'presence:online_users_snapshot',
+  USER_PRESENCE_CHANGED: 'user:presence_changed',
+
+  CHAT_JOIN: 'chat:join',
+  CHAT_LEAVE: 'chat:leave',
+  CHAT_MESSAGE: 'chat:message',
+  CHAT_DELIVERED: 'chat:delivered',
+  CHAT_READ: 'chat:read',
+  CHAT_TYPING: 'chat:typing',
+  CHAT_STOP_TYPING: 'chat:stop_typing',
+
+  ROOM_JOIN: 'room:join',
+  ROOM_LEAVE: 'room:leave',
+  ROOM_RAISE_HAND: 'room:raise_hand',
+  ROOM_LOWER_HAND: 'room:lower_hand',
+  ROOM_MUTE: 'room:mute',
+  ROOM_UNMUTE: 'room:unmute',
+  ROOM_USER_JOINED: 'room:user_joined',
+  ROOM_USER_LEFT: 'room:user_left',
+  ROOM_HAND_RAISED: 'room:hand_raised',
+  ROOM_HAND_LOWERED: 'room:hand_lowered',
+  ROOM_MUTE_CHANGED: 'room:mute_changed',
+  ROOM_PARTICIPANTS: 'room:participants',
+  ROOM_ENDED: 'room:ended',
+  ROOM_ERROR: 'room:error',
+  ROOM_MIC_LIMIT: 'room:mic_limit_reached',
+  ROOM_HOST_AWAY: 'room:host_away',
+
+  NOTIFICATION_NEW: 'notification:new',
+  NOTIFICATION_READ: 'notification:read',
+};

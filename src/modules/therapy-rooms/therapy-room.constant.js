@@ -1,0 +1,25 @@
+module.exports = Object.freeze({
+  ROOM_STATUS: {
+    WAITING: 'waiting',
+    ACTIVE: 'active',
+    ENDED: 'ended',
+  },
+  HOST_TYPES: {
+    DOCTOR: 'doctor',
+    ADMIN: 'admin',
+  },
+  DEFAULTS: {
+    MAX_PARTICIPANTS: 50,
+    MAX_ACTIVE_MICS: 5,
+    MAX_PARTICIPANTS_MIN: 2,
+    MAX_PARTICIPANTS_MAX: 200,
+    MAX_TOKEN_DURATION_MS: 95 * 60 * 1000,
+    TOKEN_BUFFER_SECONDS: 300,
+    HOST_GRACE_PERIOD_MS: 10 * 60 * 1000,
+    EMPTY_ROOM_AUTO_END_MS: 5 * 60 * 1000,
+    ROOM_EXPIRY_AFTER_END_MS: 24 * 60 * 60 * 1000,
+    ROOM_CODE_LENGTH: 6,
+    ROOM_CODE_MAX_ATTEMPTS: 10,
+    ROOM_ID_LENGTH: 12,
+  }
+});

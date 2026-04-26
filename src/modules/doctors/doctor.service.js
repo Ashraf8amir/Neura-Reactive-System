@@ -52,7 +52,16 @@ class DoctorService {
     async updateDoctorProfessionalInfo(doctorId, updateData){
         const doctor = await Doctor.findByIdAndUpdate(
             doctorId,
-            { $set: { professionalInfo: updateData } },
+            { $set: { 
+                'professionalInfo.primarySpecialization': updateData.primarySpecialization,
+                'professionalInfo.subSpecializations': updateData.subSpecializations,
+                'professionalInfo.highestDegree': updateData.highestDegree,
+                'professionalInfo.medicalSchool': updateData.medicalSchool,
+                'professionalInfo.yearsOfExperience': updateData.yearsOfExperience,
+                'professionalInfo.currentPosition': updateData.currentPosition,
+                'professionalInfo.hospitalAffiliation': updateData.hospitalAffiliation,
+                'professionalInfo.bio': updateData.bio
+            } },
             { new: true, runValidators: true }
         );
 

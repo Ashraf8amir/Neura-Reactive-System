@@ -24,7 +24,6 @@ const unregister = (userId, socketId) => {
   if (!sockets) return;
 
   sockets.delete(socketId);
-
   if (sockets.size === 0) {
     onlineUserSockets.delete(normalizedUserId);
   }
@@ -46,16 +45,9 @@ const getSocketIds = (userId) => {
   return sockets ? Array.from(sockets) : [];
 };
 
-const getAllOnlineUsers = () =>
-  Array.from(onlineUserSockets.entries()).map(([userId, sockets]) => ({
-    userId,
-    socketCount: sockets.size,
-  }));
-
 module.exports = {
   register,
   unregister,
   isOnline,
-  getSocketIds,
-  getAllOnlineUsers,
+  getSocketIds
 };

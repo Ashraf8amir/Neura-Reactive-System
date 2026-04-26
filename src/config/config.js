@@ -44,6 +44,8 @@ const config = {
     pineconeIndex: process.env.PINECONE_INDEX,
     groqApiKey: process.env.GROQ_API_KEY,
     grokApiKey: process.env.GROQ_API_KEY,
+    agoraAppId: process.env.AGORA_APP_ID,
+    agoraAppCertificate: process.env.AGORA_APP_CERTIFICATE,
 };
 
 module.exports = config;

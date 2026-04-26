@@ -9,8 +9,8 @@ const cloudinaryService = require('../../config/cloudinary');
 const AppError = require('../../core/appError');
 const { HTTP_STATUS_TEXT, ROLE } = require('../../shared/constants/enums');
 const { getPagination } = require('../../shared/utils/globalHelper');
-const socketEvents = require('../../socket/socket.events');
-const socketRegistry = require('../../socket/socket.registry');
+const socketEvents = require('../../socket/constants/socket.events');
+const socketRegistry = require('../../socket/services/socket.registry');
 
 class ChatService {
   messageStatuses = chatConstants.MESSAGE_STATUSES;

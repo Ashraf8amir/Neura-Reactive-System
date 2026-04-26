@@ -11,6 +11,10 @@ const initJobs = () => {
         JobService.unblockBlacklistedPatients();
     });
 
+    cron.schedule('*/15 * * * *', () => {
+        JobService.cleanupInactiveTherapyRooms();
+    });
+
     logger.info('Background Jobs Scheduled Successfully');
 }
 

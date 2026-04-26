@@ -3,13 +3,24 @@ const app = require('./src/app.js');
 const config = require('./src/config/config.js');
 const connectDB = require('./src/config/database.js');
 const logger = require('./src/core/logger.js');
-const initJobs = require('./src/jobs/index');
-const { initializeSocket } = require('./src/socket/socket.manager');
+const initJobs = require('./src/jobs');
+const { initializeSocket, getIO } = require('./src/socket');
 
 let server;
 
 const gracefulShutdown = (signal) => {
     logger.info(`Received ${signal}. Starting graceful shutdown...`);
+
+    try {
+        const io = getIO();
+        if (io) {
+            io.close(() => {
+                logger.info('Socket.IO server closed.');
+            });
+        }
+    } catch (err) {
+        logger.warn('Socket.IO not initialized, skipping socket shutdown.');
+    }
     
     if (server) {
         server.close((err) => {
