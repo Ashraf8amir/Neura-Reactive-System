@@ -70,5 +70,5 @@ const registerChatHandlers = (socket) => {
 };
 
 module.exports = {
-  registerChatHandlers,
+  registerChatHandlers
 };

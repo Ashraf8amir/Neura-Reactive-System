@@ -56,7 +56,7 @@ const formatLifestyle = (lifestyle) => {
     return `Smoking: ${smokingStatus || 'Unknown'}, Alcohol: ${alcoholConsumption || 'Unknown'}, Physical Activity: ${physicalActivityLevel || 'Unknown'}, Sleep Quality: ${sleepQuality || 'Unknown'}, Average Sleep Hours: ${averageSleepHours || 'Unknown'}`;
 }
 
-const buildLlamaPrompt = (patientInfo, previousVisits, transcript) => {
+const buildPrompt = (patientInfo, previousVisits, transcript) => {
     return `You are an expert clinical documentation AI assisting a doctor during a medical visit.
 You will receive a real doctor-patient conversation in Arabic (Egyptian dialect).
 Your job is to analyze the conversation and produce a structured medical report.
@@ -268,7 +268,7 @@ module.exports = {
     formatChronicDiseases,
     formatAllergies,
     formatMedications,
-    buildLlamaPrompt,
+    buildPrompt,
     parseJsonResponse,
     formatPatientForPrompt
 };

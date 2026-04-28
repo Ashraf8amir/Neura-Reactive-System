@@ -147,8 +147,7 @@ const buildDigitalTwinUpdatePrompt = (aiSummary, currentTwin) => {
     const strokeRisk = currentTwin?.riskScores?.strokeRisk?.level ?? 'unknown';
     const activeAlerts = JSON.stringify(currentTwin?.alerts || []);
 
-    return `You are a medical AI assistant updating a patient's Digital Twin
-after a new medical visit.
+    return `You are a medical AI assistant updating a patient's Digital Twin after a new medical visit.
 === LATEST VISIT SUMMARY ===
 ${JSON.stringify(aiSummary || {}, null, 2)}
 === CURRENT DIGITAL TWIN STATE ===

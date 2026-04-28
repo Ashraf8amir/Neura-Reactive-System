@@ -28,7 +28,7 @@ const addUser = (roomId, userId, userData = {}) => {
     profileImage: userData.profileImage || existing.profileImage || null,
     role: userData.role || existing.role || null,
     isMuted: typeof userData.isMuted === 'boolean' ? userData.isMuted : (existing.isMuted ?? true),
-    handRaised: typeof userData.handRaised === 'boolean' ? userData.handRaised : (existing.handRaised ?? false),
+    handRaised: typeof userData.handRaised === 'boolean' ? userData.handRaised : (existing.handRaised ?? false)
   };
 
   usersMap.set(normalizedUserId, merged);
@@ -104,12 +104,11 @@ const getParticipants = (roomId) => {
 
   return Array.from(usersMap.entries()).map(([userId, value]) => ({
     userId,
-    ...value,
+    ...value
   }));
 };
 
-const getActiveMicCount = (roomId) =>
-  getParticipants(roomId).filter((participant) => participant.isMuted === false).length;
+const getActiveMicCount = (roomId) => getParticipants(roomId).filter((participant) => participant.isMuted === false).length;
 
 const isInRoom = (roomId, userId) => Boolean(getUser(roomId, userId));
 
@@ -125,7 +124,7 @@ const getRoomsForUser = (userId) => {
         roomId,
         participant: {
           userId: normalizedUserId,
-          ...participant,
+          ...participant
         },
       });
     }
@@ -160,5 +159,5 @@ module.exports = {
   getRoomsForUser,
   cleanupRoom,
   hasRoom,
-  getUser,
+  getUser
 };

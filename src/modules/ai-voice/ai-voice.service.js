@@ -8,7 +8,7 @@ const AppError = require('../../core/appError');
 const { HTTP_STATUS_TEXT } = require('../../shared/constants/enums.js');
 const { aiVoiceConstants } = require('./ai-voice.constant');
 const {
-    buildLlamaPrompt,
+    buildPrompt,
     parseJsonResponse,
     formatPatientForPrompt
 } = require('./ai-voice.helper');
@@ -181,7 +181,7 @@ class AiVoiceService {
             throw new AppError(500, HTTP_STATUS_TEXT.ERROR, 'LLM service not configured');
         }
 
-        const prompt = buildLlamaPrompt(patientInfo, previousVisits, transcript);
+        const prompt = buildPrompt(patientInfo, previousVisits, transcript);
 
         try {
             const response = await axios.post(

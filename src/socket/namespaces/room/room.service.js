@@ -235,7 +235,7 @@ const handleSocketDisconnect = async (io, socket) => {
         {
           roomId,
           hostId: socket.userId,
-          gracePeriodSeconds: Math.floor(therapyRoomConstants.DEFAULTS.HOST_GRACE_PERIOD_MS / 1000),
+          gracePeriodSeconds: Math.floor(therapyRoomConstants.DEFAULTS.HOST_GRACE_PERIOD_MS / 1000)
         },
         '/rooms'
       );
