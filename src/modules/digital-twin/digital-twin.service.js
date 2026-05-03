@@ -73,9 +73,10 @@ class DigitalTwinService {
         const patientProfile = this.formatPatientProfileForPrompt(patient);
         const prompt = buildInitialDigitalTwinPrompt(patientProfile);
         const initialTwinPayload = await this.generateDigitalTwinFromAI(prompt, retryCount, useFallback);
-        validateDTUpdateJSON(initialTwinPayload, { requireFull: true });
+        const normalizedInitialPayload = this.normalizeAIPayload(initialTwinPayload);
+        validateDTUpdateJSON(normalizedInitialPayload, { requireFull: true });
 
-        const createPayload = this.buildInitialTwinDocument(patientId, patient, initialTwinPayload);
+        const createPayload = this.buildInitialTwinDocument(patientId, patient, normalizedInitialPayload);
 
         try {
             return await DigitalTwin.create(createPayload);
@@ -96,9 +97,10 @@ class DigitalTwinService {
 
         const prompt = buildDigitalTwinUpdatePrompt(record.aiSummary, twin.toObject());
         const updatePayload = await this.generateDigitalTwinFromAI(prompt, retryCount, useFallback);
-        validateDTUpdateJSON(updatePayload);
+        const normalizedAiPayload = this.normalizeAIPayload(updatePayload);
+        validateDTUpdateJSON(normalizedAiPayload);
 
-        const normalizedUpdate = this.normalizeUpdatePayload(updatePayload);
+        const normalizedUpdate = this.normalizeUpdatePayload(normalizedAiPayload);
         const flattenedUpdate = flattenObjectForSet(normalizedUpdate);
 
         if (Object.keys(flattenedUpdate).length === 0) {
@@ -414,8 +416,43 @@ class DigitalTwinService {
         };
     }
 
-    normalizeUpdatePayload(payload) {
+    normalizeAIPayload(payload) {
         const normalized = { ...payload };
+
+        if (normalized.currentState && Array.isArray(normalized.currentState.affectedOrgans)) {
+            normalized.currentState = {
+                ...normalized.currentState,
+                affectedOrgans: normalized.currentState.affectedOrgans.map((organEntry) => {
+                    if (!organEntry || typeof organEntry !== 'object') {
+                        return organEntry;
+                    }
+
+                    return {
+                        ...organEntry,
+                        organ: this.normalizeOrganAlias(organEntry.organ)
+                    };
+                })
+            };
+        }
+
+        return normalized;
+    }
+
+    normalizeOrganAlias(organ) {
+        if (typeof organ !== 'string') {
+            return organ;
+        }
+
+        const normalizedOrgan = organ.trim();
+        const organAliases = {
+            lungs: digitalTwinConstants.organTypes.LUNG
+        };
+
+        return organAliases[normalizedOrgan.toLowerCase()] || normalizedOrgan;
+    }
+
+    normalizeUpdatePayload(payload) {
+        const normalized = this.normalizeAIPayload(payload);
         const now = new Date();
 
         if (Array.isArray(normalized.riskPredictions)) {

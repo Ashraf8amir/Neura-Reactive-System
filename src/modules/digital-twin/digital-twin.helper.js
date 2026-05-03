@@ -110,9 +110,9 @@ Categories: 0-20 poor, 21-40 fair, 41-60 good, 61-80 very_good, 81-100 excellent
 
 Diabetes          → kidneys (primary), heart (secondary), brain (secondary)
 Hypertension      → brain (primary), heart (secondary), kidneys (secondary)
-Heart disease     → heart (primary), lungs (secondary)
+Heart disease     → heart (primary), lung (secondary)
 Liver disease     → liver (primary), stomach (secondary)
-COPD/respiratory  → lungs (primary), heart (secondary)
+COPD/respiratory  → lung (primary), heart (secondary)
 Obesity           → heart (primary), liver (secondary), kidneys (secondary)
 Kidney disease    → kidneys (primary), heart (secondary)
 Use ONLY: heart, lung, kidneys, liver, brain, pancreas, stomach, intestinesLarge, intestinesSmall, bladder
