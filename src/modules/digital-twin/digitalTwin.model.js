@@ -35,14 +35,7 @@ const digitalTwinSchema = new mongoose.Schema({
         }
       },
       height: Number,
-      bmi: {
-        value: Number,
-        category: {
-          type: String,
-          enum: Object.values(digitalTwinConstants.bmiCategory),
-          default: digitalTwinConstants.bmiCategory.UNKNOWN
-        }
-      },
+      bmi: Number,
     },
 
     affectedOrgans: [

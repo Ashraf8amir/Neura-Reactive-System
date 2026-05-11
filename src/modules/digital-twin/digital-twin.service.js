@@ -48,6 +48,7 @@ class DigitalTwinService {
     }
 
     async getOrCreateDigitalTwin(patientId) {
+        await this.migrateLegacyBmiShape(patientId);
         const existingTwin = await DigitalTwin.findOne({ patientId });
         if (existingTwin) {
             return existingTwin;
@@ -57,6 +58,7 @@ class DigitalTwinService {
     }
 
     async createInitialDigitalTwin(patientId, retryCount = 0, useFallback = false) {
+        await this.migrateLegacyBmiShape(patientId);
         const existingTwin = await DigitalTwin.findOne({ patientId });
         if (existingTwin) {
             return existingTwin;
@@ -89,6 +91,7 @@ class DigitalTwinService {
     }
 
     async updateDigitalTwinFromMedicalRecord(record, retryCount = 0, useFallback = false) {
+        await this.migrateLegacyBmiShape(record.patientId);
         let twin = await DigitalTwin.findOne({ patientId: record.patientId });
 
         if (!twin) {
@@ -334,24 +337,15 @@ class DigitalTwinService {
         const calculateBMI = () => {
             const weight = patient.weight;
             const height = patient.height;
-            let value = 0;
-            let category = digitalTwinConstants.bmiCategory.UNKNOWN;
-
-            if (typeof weight === 'number' && typeof height === 'number') {
-                const heightInMeters = height / 100;
-                value = Number((weight / (heightInMeters * heightInMeters)).toFixed(1));
+            if (typeof weight !== 'number' || typeof height !== 'number') {
+                return null;
             }
-
-            if (value > 0) {
-                if (value < 18.5) category = digitalTwinConstants.bmiCategory.UNDERWEIGHT;
-                else if (value < 25) category = digitalTwinConstants.bmiCategory.NORMAL;
-                else if (value < 30) category = digitalTwinConstants.bmiCategory.OVERWEIGHT;
-                else category = digitalTwinConstants.bmiCategory.OBESE;
-            }
-            return { value, category };
+            const heightInMeters = height / 100;
+            return Number((weight / (heightInMeters * heightInMeters)).toFixed(1));
         };
 
         const vitals = {};
+        const bmiValue = calculateBMI();
         if (typeof patient.weight === 'number') {
             vitals.weight = {
                 value: patient.weight,
@@ -361,11 +355,8 @@ class DigitalTwinService {
         if (typeof patient.height === 'number') {
             vitals.height = patient.height;
         }
-        if (calculateBMI() !== null) {
-            vitals.bmi = {
-                value: calculateBMI().value,
-                category: calculateBMI().category
-            };
+        if (bmiValue !== null) {
+            vitals.bmi = bmiValue;
         }
 
         return {
@@ -414,6 +405,29 @@ class DigitalTwinService {
             isActive: true,
             lastSyncedWithPatient: now
         };
+    }
+
+    async migrateLegacyBmiShape(patientId) {
+        const legacyTwin = await DigitalTwin.findOne({
+            patientId,
+            'currentState.vitals.bmi.value': { $exists: true }
+        })
+            .select('currentState.vitals.bmi.value')
+            .lean();
+
+        const legacyBmiValue = legacyTwin?.currentState?.vitals?.bmi?.value;
+        if (typeof legacyBmiValue !== 'number') {
+            return;
+        }
+
+        await DigitalTwin.updateOne(
+            { patientId },
+            {
+                $set: {
+                    'currentState.vitals.bmi': legacyBmiValue
+                }
+            }
+        );
     }
 
     normalizeAIPayload(payload) {
