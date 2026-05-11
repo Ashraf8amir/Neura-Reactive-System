@@ -286,7 +286,19 @@ class DigitalTwinService {
             const now = new Date();
             const age = Math.floor((now - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
             return Number.isFinite(age) ? age : 'unknown';
-        }
+        };
+
+        const calculateBmi = () => {
+            const weight = Number(patient.weight);
+            const height = Number(patient.height);
+
+            if (!Number.isFinite(weight) || !Number.isFinite(height) || height <= 0) {
+                return null;
+            }
+
+            const bmi = weight / (height / 100) ** 2;
+            return Number.isFinite(bmi) ? Number(bmi.toFixed(1)) : null;
+        };
 
         return {
             age: calculateAge(),
@@ -294,7 +306,7 @@ class DigitalTwinService {
             bloodType: patient.bloodType || 'unknown',
             weight: patient.weight ?? 'unknown',
             height: patient.height ?? 'unknown',
-            bmi: Number(patient.weight / (patient.height / 100) ** 2).toFixed(1),
+            bmi: calculateBmi(),
             smoking: lifestyle.smokingStatus || 'unknown',
             alcohol: lifestyle.alcoholConsumption || 'unknown',
             exercise: lifestyle.physicalActivity || 'unknown',

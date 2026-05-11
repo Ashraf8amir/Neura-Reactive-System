@@ -9,13 +9,16 @@ const formatList = (items) => {
 };
 
 const buildInitialDigitalTwinPrompt = (profile) => {
+    const bmiValue = Number(profile.bmi);
+    const bmiDisplay = Number.isFinite(bmiValue) ? bmiValue.toFixed(1) : 'unknown';
+
     return `You are a medical AI assistant creating an initial Digital Twin for a patient.
 Analyze the patient profile and generate a baseline health assessment.
 === PATIENT PROFILE ===
 
 Basic Info:
 Age: ${profile.age} | Gender: ${profile.gender} | Blood Type: ${profile.bloodType}
-Weight: ${profile.weight}kg | Height: ${profile.height}cm | BMI: ${profile.bmi?.toFixed(1) || 'unknown'}
+Weight: ${profile.weight}kg | Height: ${profile.height}cm | BMI: ${bmiDisplay}
 
 Medical History:
 Chronic Diseases: ${formatList(profile.chronicDiseases)}
@@ -475,7 +478,7 @@ const validateDTUpdateJSON = (payload, options = {}) => {
         }
 
         if (requireFull) {
-            const requiredSections = ['currentState', 'riskScores', 'riskPredictions', 'recommendations', 'alerts', 'bmi'];
+            const requiredSections = ['currentState', 'riskScores', 'riskPredictions', 'recommendations', 'alerts'];
             for (const section of requiredSections) {
                 if (payload[section] === undefined) {
                     throw new Error(`Missing required section: ${section}`);
