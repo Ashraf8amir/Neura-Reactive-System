@@ -11,6 +11,13 @@ const cacheTTL = {
         today: 20,
         patientBrief: 900
     },
+    digitalTwin: {
+        state: 60,
+        metrics: 120,
+        riskScores: 180,
+        trends: 900,
+        whatIf: 900
+    },
     fallback: fallbackTtl
 };
 

@@ -35,7 +35,10 @@ const formatPreviousSurgeries = (surgeries) => {
     if (!surgeries || surgeries.length === 0) return 'None reported';
     return surgeries.map(s => {
         let str = s.nameOfSurgery || 'Unknown surgery';
-        if (s.date) str += ` (${s.date.toISOString().split('T')[0]})`;
+        if (s.date) {
+            const dateObj = typeof s.date === 'string' ? new Date(s.date) : s.date;
+            str += ` (${dateObj.toISOString().split('T')[0]})`;
+        }
         if (s.hospital) str += ` at ${s.hospital}`;
         if (s.doctor) str += ` by Dr. ${s.doctor}`;
         if (s.notes) str += ` - Notes: ${s.notes}`;

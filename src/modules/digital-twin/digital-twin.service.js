@@ -14,37 +14,56 @@ const {
     validateDTUpdateJSON,
     flattenObjectForSet
 } = require('./digital-twin.helper');
+const cacheService = require('../../cache/cache.service');
+const digitalTwinCache = require('./digital-twin.cache');
 
 class DigitalTwinService {
     async getMyTwin(patientId) {
-        return this.getOrCreateDigitalTwin(patientId);
+        const cacheKey = digitalTwinCache.getDigitalTwinStateKey(patientId);
+        return cacheService.getOrSetCache(
+            cacheKey,
+            async () => this.getOrCreateDigitalTwin(patientId),
+            digitalTwinCache.ttl.state
+        );
     }
 
     async getPatientTwin(patientId) {
-        return this.getOrCreateDigitalTwin(patientId);
+        const cacheKey = digitalTwinCache.getDigitalTwinStateKey(patientId);
+        return cacheService.getOrSetCache(
+            cacheKey,
+            async () => this.getOrCreateDigitalTwin(patientId),
+            digitalTwinCache.ttl.state
+        );
     }
 
     async simulateWhatIf(patientId, scenario) {
-        const [patient, twin] = await Promise.all([
-            Patient.findById(patientId)
-                .select('dateOfBirth gender bloodType medicalProfile')
-                .lean(),
-            DigitalTwin.findOne({ patientId })
-                .select('currentState.overallHealthScore currentState.affectedOrgans riskScores')
-                .lean()
-        ]);
+        const cacheKey = digitalTwinCache.getWhatIfSimulationKey(patientId, scenario);
+        return cacheService.getOrSetCache(
+            cacheKey,
+            async () => {
+                const [patient, twin] = await Promise.all([
+                    Patient.findById(patientId)
+                        .select('dateOfBirth gender bloodType medicalProfile')
+                        .lean(),
+                    DigitalTwin.findOne({ patientId })
+                        .select('currentState.overallHealthScore currentState.affectedOrgans riskScores')
+                        .lean()
+                ]);
 
-        if (!patient) {
-            throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Patient not found');
-        }
+                if (!patient) {
+                    throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Patient not found');
+                }
 
-        if (!twin) {
-            throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Digital Twin not found');
-        }
+                if (!twin) {
+                    throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Digital Twin not found');
+                }
 
-        const patientProfile = this.formatPatientProfileForPrompt(patient);
-        const prompt = buildWhatIfSimulationPrompt(patientProfile, twin, scenario);
-        return this.simulateWhatIfWithAI(prompt);
+                const patientProfile = this.formatPatientProfileForPrompt(patient);
+                const prompt = buildWhatIfSimulationPrompt(patientProfile, twin, scenario);
+                return this.simulateWhatIfWithAI(prompt);
+            },
+            digitalTwinCache.ttl.whatIf
+        );
     }
 
     async getOrCreateDigitalTwin(patientId) {
@@ -136,7 +155,9 @@ class DigitalTwinService {
         if (!updatedTwin) {
             throw new AppError(404, HTTP_STATUS_TEXT.NOT_FOUND, 'Digital Twin not found');
         }
-        
+
+        await digitalTwinCache.clearTwinOnMedicalRecordUpdate(record.patientId);
+
         return updatedTwin;
     }
 
